@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+    <declaration>// Place global declarations here.
+
+        /**sefsefse
+        Tendremos dos inyectores, uno de aire y uno de oxigeno
+        Cada inyector tiene un dato tipo bool que indica si está encendido o no: isOn
+        Además un entero que indica el caudal que circulará
+
+        **/
+        typedef struct {
+        bool isOn;
+        int caudal;
+        } Inyector;
+
+
+        /**
+        De acuerdo a la siguiente tabla
+
+        |  x  |  y  |
+        ------------
+        | 120 | 30  |
+        | 220 | 40  |
+        | 280 | 50  |
+        | 350 | 60  |
+        | 380 | 70  |
+        | 410 | 80  |
+        | 450 | 90  |
+        | 500 | 100 |
+
+        Se construye una función para extrapolar los valores, dicha función es de grado 2 debido al desbordamiento de int
+        teniendo f(x) = 0,0001x^2+0,1441x+3,6656
+
+
+        int aperturaDeInyector(int x){
+        //return (9*x*x + 14407*x + 366559)/100000;
+        //return fint(-0.000000006526*x*x*x*x + 0.000007558106*x*x*x - 0.002707885697*x*x + 0.481310082676*x - 0.079221048302);
+        return (1*x*x+1441*x+36656)/10000;
+        }
+
+        //Inversa de aperturaDeInyector
+        int caudalDeApertura(int x){
+
+        return (-1441+fint(sqrt(40000*x+1929857)))/2;
+        }**/
+
+    </declaration>
+    <template>
+        <name x="5" y="5">ConfiguradorInicial</name>
+        <parameter>int[0,500] &amp;caudalAire, int[0,100] &amp;FiO2, int[0,100] &amp;dutyAire,int[0,100] &amp;dutyOxigeno, broadcast chan &amp;finConfiguracion</parameter>
+        <declaration>// Place local declarations here.
+            /**
+            Configuración de ciclos de trabajo de los inyectores
+            caudalAire: Es el caudal requerido ([L^3 T^-1]; dado en litros por minuto )
+            FiO2: Fracción de oxígeno inspirado, dado en porcentaje de oxigeno en el aire
+            **/
+            int[0,500] oxigenoEnAire;
+            int[0,500] aireSinOxigeno;
+
+
+            /**
+            De acuerdo a la siguiente tabla
+
+            |  x  |  y  |
+            ------------
+            | 120 | 30  |
+            | 220 | 40  |
+            | 280 | 50  |
+            | 350 | 60  |
+            | 380 | 70  |
+            | 410 | 80  |
+            | 450 | 90  |
+            | 500 | 100 |
+
+            Se construye una función para extrapolar los valores, dicha función es de grado 2 debido al desbordamiento de int
+            teniendo f(x) = 0,0001x^2+0,1441x+3,6656
+            **/
+
+            int aperturaDeInyector(int x){
+            return  (x&lt;=120)?
+            30:
+            (x&lt;=220)?
+            40:
+            (x&lt;=280)?
+            50:
+            (x&lt;=350)?
+            60:
+            (x&lt;=380)?
+            70:
+            (x&lt;=410)?
+            80:
+            (x&lt;=450)?
+            90:
+            100; //more than 450, expected until 500
+
+            }
+
+
+
+
+        </declaration>
+        <location id="id0" x="-68" y="17">
+            <committed/>
+        </location>
+        <location id="id1" x="153" y="17">
+            <committed/>
+        </location>
+        <location id="id2" x="365" y="17">
+            <committed/>
+        </location>
+        <location id="id3" x="552" y="17">
+            <committed/>
+        </location>
+        <location id="id4" x="552" y="144">
+        </location>
+        <init ref="id0"/>
+        <transition>
+            <source ref="id3"/>
+            <target ref="id4"/>
+            <label kind="synchronisation" x="561" y="68">finConfiguracion!</label>
+        </transition>
+        <transition>
+            <source ref="id2"/>
+            <target ref="id3"/>
+            <label kind="assignment" x="314" y="-51">dutyAire=aperturaDeInyector(aireSinOxigeno),
+                dutyOxigeno=aperturaDeInyector(oxigenoEnAire)</label>
+        </transition>
+        <transition>
+            <source ref="id1"/>
+            <target ref="id2"/>
+            <label kind="assignment" x="144" y="42">oxigenoEnAire=fint(round(caudalAire*FiO2/100)),
+                aireSinOxigeno=caudalAire-oxigenoEnAire</label>
+        </transition>
+        <transition>
+            <source ref="id0"/>
+            <target ref="id1"/>
+            <label kind="select" x="-51" y="34">aireActual: int[0,5],
+                fiO2Actual: int[0,10]</label>
+            <label kind="assignment" x="-51" y="76">caudalAire=aireActual*100,
+                FiO2=fiO2Actual*10</label>
+            <label kind="comments" x="-340" y="-17">Se explorarán las opciones
+                en las que el caudal de aire
+                tome los valores
+                {0,100,200,300,400,500}
+
+                Adeás FiO2 tome los valores
+                {0,10,20,30,40,50,60,70,80,90,100}</label>
+        </transition>
+    </template>
+    <template>
+        <name>ValvulaEspiracion</name>
+        <parameter>chan &amp;espirado, chan &amp;encender, chan &amp;apagar, int &amp;mezcla</parameter>
+        <declaration>clock tiempo;</declaration>
+        <location id="id5" x="0" y="0">
+            <name x="-25" y="17">apagado</name>
+        </location>
+        <location id="id6" x="221" y="0">
+            <name x="187" y="17">encendido</name>
+            <label kind="invariant" x="178" y="34">tiempo&lt;=200</label>
+        </location>
+        <init ref="id5"/>
+        <transition>
+            <source ref="id6"/>
+            <target ref="id6"/>
+            <label kind="guard" x="187" y="-102">tiempo==200</label>
+            <label kind="synchronisation" x="195" y="-85">espirado!</label>
+            <label kind="assignment" x="195" y="-68">mezcla=0</label>
+            <label kind="comments" x="323" y="-51">Consumo la mezcla</label>
+            <nail x="195" y="-42"/>
+            <nail x="246" y="-42"/>
+        </transition>
+        <transition>
+            <source ref="id6"/>
+            <target ref="id5"/>
+            <label kind="guard" x="76" y="-136">tiempo==200</label>
+            <label kind="synchronisation" x="76" y="-119">apagar?</label>
+            <label kind="assignment" x="76" y="-102">tiempo=0</label>
+            <nail x="110" y="-76"/>
+        </transition>
+        <transition>
+            <source ref="id5"/>
+            <target ref="id6"/>
+            <label kind="synchronisation" x="68" y="0">encender?</label>
+            <label kind="assignment" x="76" y="17">tiempo=0</label>
+        </transition>
+    </template>
+    <template>
+        <name>RegularMezcla</name>
+        <parameter>chan &amp;mezclado, chan  &amp;encender, chan &amp;apagar, int &amp;Fuente, int[0,100] &amp;duty, broadcast chan &amp;finConfiguracion, int &amp;mezcla</parameter>
+        <declaration>clock tiempo;
+
+            /**
+            De acuerdo a la siguiente tabla
+
+            | apertura | caudal |
+            ---------------------
+            |    30    |   120  |
+            |    40    |   220  |
+            |    50    |   280  |
+            |    60    |   350  |
+            |    70    |   380  |
+            |    80    |   410  |
+            |    90    |   450  |
+            |    100   |   500  |
+
+            Adicionales para completar las posibilidades con el duty de 30%
+            | apertura | caudal |
+            ---------------------
+            |    00    |   120  |
+            |    10    |   120  |
+            |    20    |   120  |
+
+            **/
+            int parametros[11] = {120,120,120,120,220,280,350,380,410,450,500};
+
+            int caudalDeApertura(int n){
+
+            return parametros[n/10];
+            }</declaration>
+        <location id="id7" x="161" y="8">
+            <name x="136" y="25">apagado</name>
+        </location>
+        <location id="id8" x="382" y="8">
+            <name x="348" y="25">encendido</name>
+            <label kind="invariant" x="340" y="42">tiempo&lt;=300</label>
+        </location>
+        <init ref="id7"/>
+        <transition>
+            <source ref="id8"/>
+            <target ref="id8"/>
+            <label kind="guard" x="348" y="-127">tiempo==300</label>
+            <label kind="synchronisation" x="348" y="-110">mezclado!</label>
+            <label kind="assignment" x="348" y="-93">mezcla+=caudalDeApertura(duty)</label>
+            <nail x="348" y="-42"/>
+            <nail x="408" y="-42"/>
+        </transition>
+        <transition>
+            <source ref="id8"/>
+            <target ref="id7"/>
+            <label kind="synchronisation" x="246" y="-102">apagar?</label>
+            <label kind="assignment" x="246" y="-85">tiempo=0</label>
+            <nail x="272" y="-68"/>
+        </transition>
+        <transition>
+            <source ref="id7"/>
+            <target ref="id8"/>
+            <label kind="synchronisation" x="238" y="17">encender?</label>
+            <label kind="assignment" x="246" y="34">tiempo=0</label>
+        </transition>
+    </template>
+    <template>
+        <name>General</name>
+        <parameter>broadcast chan &amp;finConfiguracion, chan &amp;oxigenoMezclado, chan  &amp;encenderOxigeno, chan &amp;apagarOxigeno, chan &amp;aireMezclado, chan  &amp;encenderAire, chan &amp;apagarAire, chan &amp;espirado, chan &amp;encenderValvula, chan &amp;apagarValvula</parameter>
+        <declaration>clock tiempo;</declaration>
+        <location id="id9" x="0" y="0">
+            <name x="-68" y="-42">ConfiguracionParametros</name>
+        </location>
+        <location id="id10" x="0" y="93">
+            <name x="17" y="68">configurado</name>
+            <urgent/>
+        </location>
+        <location id="id11" x="0" y="246">
+        </location>
+        <location id="id12" x="-76" y="314">
+        </location>
+        <location id="id13" x="76" y="314">
+        </location>
+        <location id="id14" x="0" y="391">
+        </location>
+        <location id="id15" x="-76" y="170">
+            <urgent/>
+        </location>
+        <location id="id16" x="76" y="170">
+            <urgent/>
+        </location>
+        <location id="id17" x="416" y="518">
+            <urgent/>
+        </location>
+        <location id="id18" x="416" y="93">
+            <name x="374" y="42">pausaEspiracion</name>
+            <label kind="invariant" x="391" y="59">tiempo&lt;=10</label>
+        </location>
+        <location id="id19" x="0" y="518">
+            <name x="-51" y="527">pausaInspiracion</name>
+            <label kind="invariant" x="-34" y="544">tiempo&lt;=10</label>
+        </location>
+        <location id="id20" x="-76" y="459">
+        </location>
+        <location id="id21" x="76" y="459">
+        </location>
+        <location id="id22" x="416" y="391">
+        </location>
+        <location id="id23" x="416" y="246">
+        </location>
+        <init ref="id9"/>
+        <transition>
+            <source ref="id23"/>
+            <target ref="id18"/>
+            <label kind="synchronisation" x="425" y="153">apagarValvula!</label>
+            <label kind="assignment" x="442" y="170">tiempo=0</label>
+        </transition>
+        <transition>
+            <source ref="id22"/>
+            <target ref="id23"/>
+            <label kind="synchronisation" x="425" y="306">espirado?</label>
+        </transition>
+        <transition>
+            <source ref="id17"/>
+            <target ref="id22"/>
+            <label kind="synchronisation" x="425" y="442">encenderValvula!</label>
+        </transition>
+        <transition>
+            <source ref="id19"/>
+            <target ref="id17"/>
+            <label kind="guard" x="170" y="518">tiempo==10</label>
+        </transition>
+        <transition>
+            <source ref="id20"/>
+            <target ref="id19"/>
+            <label kind="synchronisation" x="-119" y="476">apagarAire!</label>
+            <label kind="assignment" x="-110" y="493">tiempo=0</label>
+        </transition>
+        <transition>
+            <source ref="id21"/>
+            <target ref="id19"/>
+            <label kind="synchronisation" x="42" y="476">apagarOxigeno!</label>
+            <label kind="assignment" x="59" y="493">tiempo=0</label>
+        </transition>
+        <transition>
+            <source ref="id14"/>
+            <target ref="id21"/>
+            <label kind="synchronisation" x="51" y="408">apagarAire!</label>
+        </transition>
+        <transition>
+            <source ref="id14"/>
+            <target ref="id20"/>
+            <label kind="synchronisation" x="-144" y="408">apagarOxigeno!</label>
+        </transition>
+        <transition>
+            <source ref="id18"/>
+            <target ref="id10"/>
+            <label kind="guard" x="170" y="68">tiempo==10</label>
+        </transition>
+        <transition>
+            <source ref="id16"/>
+            <target ref="id11"/>
+            <label kind="synchronisation" x="51" y="195">encenderOxigeno!</label>
+        </transition>
+        <transition>
+            <source ref="id10"/>
+            <target ref="id16"/>
+            <label kind="synchronisation" x="42" y="110">encenderAire!</label>
+        </transition>
+        <transition>
+            <source ref="id15"/>
+            <target ref="id11"/>
+            <label kind="synchronisation" x="-144" y="195">encenderAire!</label>
+        </transition>
+        <transition>
+            <source ref="id10"/>
+            <target ref="id15"/>
+            <label kind="synchronisation" x="-153" y="110">encenderOxigeno!</label>
+        </transition>
+        <transition>
+            <source ref="id12"/>
+            <target ref="id14"/>
+            <label kind="synchronisation" x="-144" y="340">aireMezclado?</label>
+            <label kind="assignment" x="-119" y="357">tiempo=0</label>
+        </transition>
+        <transition>
+            <source ref="id13"/>
+            <target ref="id14"/>
+            <label kind="synchronisation" x="51" y="340">oxigenoMezclado?</label>
+            <label kind="assignment" x="68" y="357">tiempo=0</label>
+        </transition>
+        <transition>
+            <source ref="id11"/>
+            <target ref="id13"/>
+            <label kind="synchronisation" x="42" y="255">aireMezclado?</label>
+        </transition>
+        <transition>
+            <source ref="id11"/>
+            <target ref="id12"/>
+            <label kind="synchronisation" x="-161" y="255">oxigenoMezclado?</label>
+        </transition>
+        <transition>
+            <source ref="id9"/>
+            <target ref="id10"/>
+            <label kind="synchronisation" x="8" y="25">finConfiguracion?</label>
+        </transition>
+    </template>
+    <system>// Place template instantiations here.
+
+        /**
+        Configuración de ciclos de trabajo de los inyectores
+        caudalAire: Es el caudal requerido ([L^3 T^-1]; dado en litros por minuto ) en un Dominio [0,500]
+        FiO2: Fracción de oxígeno inspirado, dado en porcentaje de oxigeno en el aire en un Dominio [0,100]
+
+        **/
+        int[0,500] caudalAire;
+        int[0,100] FiO2;
+
+        /**
+        Porcentaje de tiempo por segundo que va a estar activo el inyector para generar el caudal requerido,
+        tenemos un inyector de aire y uno de oxigeno
+        dutyAire: Porcentaje de apertura durante un segundo para suministrar aire
+        dutyOxigeno: Porcentaje de apertura durante un segundo para suministrar oxigeno
+        **/
+        int[0,100] dutyAire;
+        int[0,100] dutyOxigeno;
+
+        /**
+        Notificación de parte del configurador de inyectores al controlador de que están listos a través del canal finConfiguracion
+        **/
+        broadcast chan finConfiguracion;
+
+        //caudalAire, FiO2, inputs
+        //dutyAire, dutyOxigeno, outputs
+        //finConfiguracion, canal para informar a diagramaGeneral que ya están los outputs asignados
+        configuracion = ConfiguradorInicial(caudalAire, FiO2, dutyAire, dutyOxigeno, finConfiguracion);
+
+
+
+        /**
+        Regular mezcla
+
+        **/
+
+        /**
+        Inyector inyectorOxigeno={false, 0};
+        Inyector inyectorAire={false, 0};
+        **/
+
+        chan encenderOxigeno;
+        chan encenderAire;
+        chan apagarOxigeno;
+        chan apagarAire;
+
+        int O2Fuente=50;
+        int aireFuente=50;
+
+        int mezcla=0;
+
+        chan oxigenoMezclado;
+        chan aireMezclado;
+
+        regularMezclaOxigeno = RegularMezcla(oxigenoMezclado, encenderOxigeno, apagarOxigeno, O2Fuente, dutyOxigeno, finConfiguracion, mezcla);
+        regularMezclaAire =RegularMezcla(aireMezclado, encenderAire, apagarAire, aireFuente, dutyAire, finConfiguracion, mezcla);
+
+
+
+        /**
+        Valvula para expirar
+
+        **/
+
+        chan mezclaEspirada;
+        chan encenderValvula;
+        chan apagarValvula;
+
+        valvulaEspiracion = ValvulaEspiracion(mezclaEspirada, encenderValvula, apagarValvula, mezcla);
+
+        diagramaGeneral = General(finConfiguracion, oxigenoMezclado, encenderOxigeno, apagarOxigeno, aireMezclado, encenderAire, apagarAire, mezclaEspirada, encenderValvula, apagarValvula);
+
+        // List one or more processes to be composed into a system.
+        system configuracion, regularMezclaOxigeno, regularMezclaAire, valvulaEspiracion, diagramaGeneral;
+    </system>
+    <queries>
+        <query>
+            <formula>A[] not deadlock</formula>
+            <comment>Siempre habrán transiciones desde alguna locacion para realizar</comment>
+        </query>
+        <query>
+            <formula>caudalAire==400 and FiO2 == 30 --&gt; dutyAire == 50 and dutyOxigeno == 30</formula>
+            <comment>Siempre que se cumpla un caudal de aire igual a 400 y un FiO2 igual a 30 se implica que eventualmente los duty respectivos van a ser 50 y 30.
+                También se puede leer como: CaudalAire==400 y FiO2==30 conducen a dutyAire==50 y dutyOxigeno==30</comment>
+        </query>
+        <query>
+            <formula>inf{diagramaGeneral.pausaEspiracion}: diagramaGeneral.tiempo</formula>
+            <comment>En la pausa el tiempo minimo que se está en la locación es el retornado (cero)</comment>
+        </query>
+        <query>
+            <formula>sup{diagramaGeneral.pausaEspiracion}: diagramaGeneral.tiempo</formula>
+            <comment>En la pausa el tiempo maximo que se está en la locación es el retornado (diez)</comment>
+        </query>
+        <query>
+            <formula>A&lt;&gt; diagramaGeneral.pausaEspiracion</formula>
+            <comment>Eventualmente será alcanzado el estado de pausa de espiracion</comment>
+        </query>
+        <query>
+            <formula>A&lt;&gt; diagramaGeneral.pausaInspiracion</formula>
+            <comment>Eventualmente será alcanzado el estado de pausa de inspiracion</comment>
+        </query>
+    </queries>
+</nta>

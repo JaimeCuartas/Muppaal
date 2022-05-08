@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+clock x;
+broadcast chan canal;</declaration>
+	<template>
+		<name x="5" y="5">Template</name>
+		<parameter>clock &amp;a</parameter>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id0" x="0" y="0">
+		</location>
+		<location id="id1" x="195" y="0">
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="18" y="-34">(x&gt;2) and (x&gt;4)</label>
+			<label kind="synchronisation" x="42" y="-25">canal!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Template0</name>
+		<location id="id2" x="0" y="0">
+		</location>
+		<location id="id3" x="170" y="-8">
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="18" y="-21">canal?</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+clock a;
+Process = Template(a);
+// List one or more processes to be composed into a system.
+system Process, Template0;
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

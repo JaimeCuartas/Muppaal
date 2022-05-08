@@ -1,0 +1,1332 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_1.dtd'><nta><declaration>typedef int[0,4] Buffer_Implementation;
+const Buffer_Implementation SET = 0;
+const Buffer_Implementation BAG = 1;
+const Buffer_Implementation STUTT_FIFO = 2;
+const Buffer_Implementation FIFO = 3;
+const Buffer_Implementation LOSSY_FIFO = 4;
+
+// ****************************
+// PROTOCOL CONFIGURATION START
+// ****************************
+
+// First choose a communication policy, possible values are: SET, BAG, STUTT_FIFO, FIFO, LOSSY_FIFO
+Buffer_Implementation buffer_Implementation = STUTT_FIFO;
+
+// Then set the maximum buffer capacity
+const int BUFFER_CAPACITY = 4;
+
+// Finally set the minimum delay and tire-outs for the retransmission of messages 
+// This is relevant only for the termination property and MIN_DELAY should be 
+// smaller or eqaul than TIRE_OUT
+// For boundedness and correctness checks, the constants should be both set to 0
+const int MIN_DELAY = 0;
+const int TIRE_OUT = 0;
+
+// **************************
+// PROTOCOL CONFIGURATION END
+// **************************
+
+
+
+bool overflow = false;
+
+typedef int[0,BUFFER_CAPACITY-1] BufferTc;
+int [0,BUFFER_CAPACITY] bufferSizeTc;
+
+typedef int[0,BUFFER_CAPACITY-1] BufferP;
+int [0,BUFFER_CAPACITY] bufferSizeP;
+
+/**Coordinator states*/
+typedef int[0,14] StateTC;
+const StateTC TC_ACTIVE = 0;
+const StateTC TC_CANCELING_ACTIVE = 1;
+const StateTC TC_CANCELING_COMPLETING = 2;
+const StateTC TC_COMPLETING = 3;
+const StateTC TC_COMPLETED = 4;
+const StateTC TC_CLOSING = 5;
+const StateTC TC_COMPENSATING = 6;
+const StateTC TC_FAILING_ACC = 7; //failing Active/Canceling/Completing
+const StateTC TC_FAILING_C = 8; //failing Compensating
+const StateTC TC_NOT_COMPLETING = 9;
+const StateTC TC_EXITING = 10;
+const StateTC TC_ENDED_FAILED = 11;
+const StateTC TC_ENDED_EXITED = 12;
+const StateTC TC_ENDED_NOTCOMPLETED = 13;
+const StateTC TC_ENDED = 14;
+
+StateTC stTC = TC_ACTIVE;
+
+/**States of the Participant.*/
+typedef int[0,13] StateP;
+const StateP P_ACTIVE = 0;
+const StateP P_CANCELING = 1;
+const StateP P_COMPLETING = 2;
+const StateP P_COMPLETED = 3;
+const StateP P_CLOSING = 4;
+const StateP P_COMPENSATING = 5;
+const StateP P_FAILING_ACC = 6; //failing Active/Canceling
+const StateP P_FAILING_C = 7; //failing Compensating
+const StateP P_NOT_COMPLETING = 8;
+const StateP P_EXITING = 9;
+const StateP P_ENDED_CANCELED = 10;
+const StateP P_ENDED_CLOSED = 11;
+const StateP P_ENDED_COMPENSATED = 12;
+const StateP P_ENDED = 13;
+
+StateP stP = P_ACTIVE;
+
+//Messages sent from TC to Participant.
+typedef int[0,7] MsgsTC;
+const MsgsTC CANCEL_TC = 0;
+const MsgsTC COMPLETE_TC = 1;
+const MsgsTC CLOSE_TC = 2;
+const MsgsTC COMPENSATE_TC =3;
+const MsgsTC FAILED_TC = 4;
+const MsgsTC EXITED_TC = 5;
+const MsgsTC NOT_COMPLETED_TC = 6;
+const MsgsTC FAILED_EXITED_NOT_COMPLETED_TC = 7;
+
+int msgTC_SET_BAG[MsgsTC];
+
+MsgsTC msgTC_FIFO[BufferTc];
+
+//Messages sent from Participant to TC.
+typedef int[0,7] MsgsP;
+const MsgsP EXIT_P = 0;
+const MsgsP COMPLETED_P = 1;
+const MsgsP FAIL_P = 2;
+const MsgsP CANNOT_COMPLETE_P = 3;
+const MsgsP CANCELED_P = 4;
+const MsgsP CLOSED_P = 5;
+const MsgsP COMPENSATED_P = 6;
+const MsgsP CANCELED_CLOSED_COMPENSATED_P = 7;
+
+int msgP_SET_BAG[MsgsP];
+
+MsgsP msgP_FIFO[BufferP];</declaration><template><name>Coordinator</name><declaration>clock x,y;
+
+void Send_Msg(MsgsTC s) {
+int i;
+//SET construct
+if (buffer_Implementation == SET) msgTC_SET_BAG[s] = true;
+//BAG construct
+if (buffer_Implementation == BAG) {
+	if (msgTC_SET_BAG[s] == BUFFER_CAPACITY) overflow = true;
+		else msgTC_SET_BAG[s]++; }
+//STUTT_FIFO construct
+if (buffer_Implementation == STUTT_FIFO)	{
+	if (bufferSizeTc == BUFFER_CAPACITY) overflow = true;
+		else
+  		{	if (msgTC_FIFO[0] != s and bufferSizeTc&gt;0)	{
+                		for (i=bufferSizeTc-1; i&gt;=0; i--) msgTC_FIFO[i+1] = msgTC_FIFO[i];
+				        bufferSizeTc++; msgTC_FIFO[0] = s; 
+                        }
+            if (bufferSizeTc==0) { bufferSizeTc++; msgTC_FIFO[0] = s; }
+   		}		
+				}
+//FIFO construct
+
+if (buffer_Implementation == FIFO || buffer_Implementation == LOSSY_FIFO) {
+	if (bufferSizeTc == BUFFER_CAPACITY) overflow = true;
+		else
+  			{ for (i=bufferSizeTc-1; i&gt;=0; i--) msgTC_FIFO[i+1] = msgTC_FIFO[i];
+				bufferSizeTc++; 
+  				msgTC_FIFO[0] = s;}
+		}
+
+}
+bool Receive_Msg(MsgsP r) {
+int i;
+//SET construct
+if (buffer_Implementation == SET) return msgP_SET_BAG[r];
+//BAG construct
+if (buffer_Implementation == BAG) return(msgP_SET_BAG[r] &gt;= 1);
+//STUTT_FIFO construct
+if (buffer_Implementation == STUTT_FIFO) {
+	for (i=bufferSizeP-1; i&gt;=0; i--) 
+		if (msgP_FIFO[i] == r) return true;
+			return false;}
+//FIFO construct
+if (buffer_Implementation == FIFO || buffer_Implementation == LOSSY_FIFO) {
+    if (bufferSizeP==0) return false;
+	return (msgP_FIFO[bufferSizeP-1] == r);}
+return false;
+}
+
+void Received_Msg(MsgsP r) {
+int i;
+//SET construct
+//if (buffer_Implementation == SET) return ;
+//BAG construct
+if (buffer_Implementation == BAG) msgP_SET_BAG[r]--;
+//STUTT_FIFO construct
+if (buffer_Implementation == STUTT_FIFO) {
+        i = 0; 
+	while ( msgP_FIFO[i] != r) i++; // msgP_SEQ[0,i-1] != r
+                bufferSizeP--;
+	 }
+//FIFO construct
+if (buffer_Implementation == FIFO || buffer_Implementation == LOSSY_FIFO) {
+	bufferSizeP--; }
+}
+//Messages transmitted by the TC
+
+bool guard1() {
+return stTC == TC_ACTIVE;
+}
+void action1() {
+Send_Msg(CANCEL_TC);
+stTC = TC_CANCELING_ACTIVE;
+}
+
+bool guard2() {
+return stTC == TC_CANCELING_ACTIVE;
+}
+void action2() {
+Send_Msg(CANCEL_TC);
+}
+
+bool guard3() {
+return stTC == TC_CANCELING_COMPLETING;
+}
+void action3() {
+Send_Msg(CANCEL_TC);
+}
+
+bool guard4() {
+return stTC == TC_COMPLETING;
+}
+void action4() {
+Send_Msg(CANCEL_TC);
+stTC = TC_CANCELING_COMPLETING;
+}
+
+bool guard5() {
+return stTC == TC_ACTIVE;
+}
+void action5() {
+Send_Msg(COMPLETE_TC);
+stTC = TC_COMPLETING;
+}
+
+bool guard6() {
+return stTC == TC_COMPLETING;
+}
+void action6() {
+Send_Msg(COMPLETE_TC);
+}
+
+bool guard7() {
+return stTC == TC_COMPLETED;
+}
+void action7() {
+Send_Msg(CLOSE_TC);
+stTC = TC_CLOSING;
+}
+
+bool guard8() {
+return stTC == TC_CLOSING;
+}
+void action8() {
+Send_Msg(CLOSE_TC);
+}
+
+bool guard9() {
+return stTC == TC_COMPLETED;
+}
+void action9() {
+Send_Msg(COMPENSATE_TC);
+stTC = TC_COMPENSATING;
+}
+
+bool guard10() {
+return stTC == TC_COMPENSATING;
+}
+void action10() {
+Send_Msg(COMPENSATE_TC);
+}
+
+bool guard11() {
+return stTC == TC_FAILING_ACC || stTC == TC_FAILING_C;
+}
+void action11() {
+Send_Msg(FAILED_TC);
+stTC = TC_ENDED_FAILED;
+}
+
+bool guard12() {
+return stTC == TC_ENDED_FAILED;
+}
+void action12() {
+Send_Msg(FAILED_TC);
+}
+
+bool guard13() {
+return stTC == TC_EXITING;
+}
+void action13() {
+Send_Msg(EXITED_TC);
+stTC = TC_ENDED_EXITED;
+}
+
+bool guard14() {
+return stTC == TC_ENDED_EXITED;
+}
+void action14() {
+Send_Msg(EXITED_TC);
+}
+
+bool guard15() {
+return stTC == TC_NOT_COMPLETING;
+}
+void action15() {
+Send_Msg(NOT_COMPLETED_TC);
+stTC = TC_ENDED_NOTCOMPLETED;
+}
+
+bool guard16() {
+return stTC == TC_ENDED_NOTCOMPLETED;
+}
+void action16() {
+Send_Msg(NOT_COMPLETED_TC);
+}
+
+//Messages received by the TC
+
+bool guard17() {
+return Receive_Msg(EXIT_P) &amp;&amp; (stTC == TC_ACTIVE || stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING || stTC == TC_COMPLETING);
+} 
+void action17() {
+stTC = TC_EXITING;
+Received_Msg(EXIT_P);
+}
+
+bool guard18() {
+return Receive_Msg(EXIT_P) &amp;&amp; stTC == TC_EXITING;
+} 
+void action18() {
+Received_Msg(EXIT_P);
+}
+
+bool guard19() {
+return Receive_Msg(EXIT_P) &amp;&amp; (stTC == TC_ENDED_FAILED || stTC == TC_ENDED_NOTCOMPLETED || stTC == TC_ENDED);
+}
+void action19() {
+Received_Msg(EXIT_P);
+}
+
+bool guard20() {
+return Receive_Msg(EXIT_P) &amp;&amp; stTC == TC_ENDED_EXITED;
+} 
+void action20() {
+Send_Msg(EXITED_TC);
+Received_Msg(EXIT_P);
+}
+
+bool guard21() {
+return Receive_Msg(COMPLETED_P) &amp;&amp; (stTC == TC_CANCELING_COMPLETING || stTC == TC_COMPLETING);
+}
+void action21() {
+stTC = TC_COMPLETED;
+Received_Msg(COMPLETED_P);
+}
+
+bool guard22() {
+return Receive_Msg(COMPLETED_P) &amp;&amp; stTC == TC_COMPLETED;
+}
+void action22() {
+Received_Msg(COMPLETED_P);
+}
+
+bool guard23() {
+return Receive_Msg(COMPLETED_P) &amp;&amp; stTC == TC_CLOSING;
+}
+void action23() {
+Send_Msg(CLOSE_TC);
+Received_Msg(COMPLETED_P);
+}
+
+bool guard24() {
+return Receive_Msg(COMPLETED_P) &amp;&amp; stTC == TC_COMPENSATING;
+}
+void action24() {
+Send_Msg(COMPENSATE_TC);
+Received_Msg(COMPLETED_P);
+}
+
+bool guard25() {
+return Receive_Msg(COMPLETED_P) &amp;&amp; stTC == TC_FAILING_C;
+}
+void action25() {
+Received_Msg(COMPLETED_P);
+}
+
+bool guard26() {
+return Receive_Msg(COMPLETED_P) &amp;&amp; (stTC == TC_ENDED_FAILED || stTC == TC_ENDED_EXITED || stTC == TC_ENDED_NOTCOMPLETED || stTC == TC_ENDED);
+}
+void action26() {
+Received_Msg(COMPLETED_P);
+}
+
+bool guard27() {
+return Receive_Msg(FAIL_P) &amp;&amp; 
+		(stTC == TC_ACTIVE || stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING || stTC == TC_COMPLETING);
+}
+void action27() {
+stTC = TC_FAILING_ACC;
+Received_Msg(FAIL_P);
+}
+
+bool guard28() {
+return Receive_Msg(FAIL_P) &amp;&amp; stTC == TC_COMPENSATING;
+}
+void action28() {
+stTC = TC_FAILING_C;
+Received_Msg(FAIL_P);
+}
+
+bool guard29() {
+return Receive_Msg(FAIL_P) &amp;&amp; stTC == TC_FAILING_ACC;
+}
+void action29() {
+Received_Msg(FAIL_P);
+}
+
+bool guard30() {
+return Receive_Msg(FAIL_P) &amp;&amp; stTC == TC_FAILING_C;
+}
+void action30() {
+Received_Msg(FAIL_P);
+}
+
+bool guard31() {
+return Receive_Msg(FAIL_P) &amp;&amp; stTC == TC_ENDED_FAILED;
+}
+void action31() {
+Send_Msg(FAILED_TC);
+Received_Msg(FAIL_P);
+}
+
+bool guard32() {
+return Receive_Msg(FAIL_P) &amp;&amp; (stTC == TC_ENDED_EXITED || stTC == TC_ENDED_NOTCOMPLETED || stTC == TC_ENDED);
+}
+void action32() {
+Received_Msg(FAIL_P);
+}
+
+bool guard33() {
+return Receive_Msg(CANNOT_COMPLETE_P) &amp;&amp; 
+		(stTC == TC_ACTIVE || stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING || stTC == TC_COMPLETING);
+}
+void action33() {
+stTC = TC_NOT_COMPLETING;
+Received_Msg(CANNOT_COMPLETE_P);
+}
+
+bool guard34() {
+return Receive_Msg(CANNOT_COMPLETE_P) &amp;&amp; stTC == TC_NOT_COMPLETING;
+}
+void action34() {
+Received_Msg(CANNOT_COMPLETE_P);
+}
+
+bool guard35() {
+return Receive_Msg(CANNOT_COMPLETE_P) &amp;&amp; (stTC == TC_ENDED_FAILED || stTC == TC_ENDED_EXITED || stTC == TC_ENDED);
+}
+void action35() {
+Received_Msg(CANNOT_COMPLETE_P);
+}
+
+bool guard36() {
+return Receive_Msg(CANNOT_COMPLETE_P) &amp;&amp; stTC == TC_ENDED_NOTCOMPLETED;
+}
+void action36() {
+Send_Msg(NOT_COMPLETED_TC);
+Received_Msg(CANNOT_COMPLETE_P);
+}
+
+//bool guard37() {
+//return Receive_Msg(CANCELED_P) &amp;&amp; (stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING);
+//}
+//void action37() {
+//Received_Msg(CANCELED_P);
+//stTC = TC_ENDED_FAILED;
+//}
+
+//bool guard38() {
+//return Receive_Msg(CANCELED_P) &amp;&amp; (stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING);
+//}
+//void action38() {
+//Received_Msg(CANCELED_P);
+//stTC = TC_ENDED_EXITED;
+//}
+
+bool guard37() {
+return Receive_Msg(CANCELED_P) &amp;&amp; (stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING);
+}
+void action37() {
+Received_Msg(CANCELED_P);
+stTC = TC_ENDED;
+}
+
+bool guard38() {
+return Receive_Msg(CANCELED_P) &amp;&amp; (stTC == TC_ENDED_FAILED || stTC == TC_ENDED_EXITED || stTC == TC_ENDED_NOTCOMPLETED || stTC == TC_ENDED);
+}
+void action38() {
+Received_Msg(CANCELED_P);
+}
+
+//bool guard41() {
+//return Receive_Msg(CLOSED_P) &amp;&amp; stTC == TC_CLOSING;
+//}
+//void action41() {
+//Received_Msg(CLOSED_P);
+//stTC = TC_ENDED_FAILED;
+//}
+
+//bool guard42() {
+//return Receive_Msg(CLOSED_P) &amp;&amp; stTC == TC_CLOSING;
+//}
+//void action42() {
+//Received_Msg(CLOSED_P);
+//stTC = TC_ENDED_EXITED;
+//}
+
+bool guard39() {
+return Receive_Msg(CLOSED_P) &amp;&amp; stTC == TC_CLOSING;
+}
+void action39() {
+Received_Msg(CLOSED_P);
+stTC = TC_ENDED;
+}
+
+bool guard40() {
+return Receive_Msg(CLOSED_P) &amp;&amp; (stTC == TC_ENDED_FAILED || stTC == TC_ENDED_EXITED || stTC == TC_ENDED_NOTCOMPLETED || stTC == TC_ENDED);
+}
+void action40() {
+Received_Msg(CLOSED_P);
+}
+
+//bool guard45() {
+//return Receive_Msg(COMPENSATED_P) &amp;&amp; stTC == TC_COMPENSATING;
+//}
+//void action45() {
+//Received_Msg(COMPENSATED_P);
+//stTC = TC_ENDED_FAILED;
+//}
+
+//bool guard46() {
+//return Receive_Msg(COMPENSATED_P) &amp;&amp; stTC == TC_COMPENSATING;
+//}
+//void action46() {
+//Received_Msg(COMPENSATED_P);
+//stTC = TC_ENDED_EXITED;
+//}
+
+bool guard41() {
+return Receive_Msg(COMPENSATED_P) &amp;&amp; stTC == TC_COMPENSATING;
+}
+void action41() {
+Received_Msg(COMPENSATED_P);
+stTC = TC_ENDED;
+}
+
+bool guard42() {
+return Receive_Msg(CANCELED_P) &amp;&amp; (stTC == TC_ENDED_FAILED || stTC == TC_ENDED_EXITED || stTC == TC_ENDED_NOTCOMPLETED || stTC == TC_ENDED);
+}
+void action42() {
+Received_Msg(CANCELED_P);
+}
+
+bool receive_msg_exit_In_456789() {
+return (Receive_Msg(EXIT_P) &amp;&amp; (stTC == TC_COMPLETED || stTC == TC_CLOSING || stTC == TC_COMPENSATING || stTC == TC_FAILING_ACC || stTC == TC_FAILING_C || stTC == TC_NOT_COMPLETING));
+}
+
+bool receive_msg_Completed_In_017910() {
+return (Receive_Msg(COMPLETED_P) &amp;&amp; (stTC == TC_ACTIVE || stTC == TC_CANCELING_ACTIVE || stTC == TC_FAILING_ACC || stTC == TC_NOT_COMPLETING || stTC == TC_EXITING));
+}
+
+bool receive_msg_fail_In_45910() {
+return (Receive_Msg(FAIL_P) &amp;&amp; (stTC == TC_COMPLETED || stTC == TC_CLOSING || stTC == TC_NOT_COMPLETING || stTC == TC_EXITING));
+}
+
+bool receive_msg_cannot_complete_In_4567810() {
+return (Receive_Msg(CANNOT_COMPLETE_P) &amp;&amp; (stTC == TC_COMPLETED || stTC == TC_CLOSING || stTC == TC_COMPENSATING || stTC == TC_FAILING_ACC || stTC == TC_FAILING_C || stTC == TC_EXITING));
+}
+
+bool receive_msg_canceled_In_0345678910() {
+return (Receive_Msg(CANCELED_P) &amp;&amp; (stTC == TC_ACTIVE || stTC == TC_COMPLETING || stTC == TC_COMPLETED || stTC == TC_CLOSING || stTC == TC_COMPENSATING || 
+										stTC == TC_FAILING_ACC || stTC == TC_FAILING_C || stTC == TC_NOT_COMPLETING || stTC == TC_EXITING));
+}
+
+bool receive_msg_closed_In_01234678910() {
+return (Receive_Msg(CLOSED_P) &amp;&amp; (stTC == TC_ACTIVE || stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING || stTC == TC_COMPLETING || stTC == TC_COMPLETED || 
+					stTC == TC_COMPENSATING || stTC == TC_FAILING_ACC || stTC == TC_FAILING_C || stTC == TC_NOT_COMPLETING || stTC == TC_EXITING));
+}
+
+bool receive_msg_compensated_In_01234578910() {
+return (Receive_Msg(COMPENSATED_P) &amp;&amp; (stTC == TC_ACTIVE || stTC == TC_CANCELING_ACTIVE || stTC == TC_CANCELING_COMPLETING || stTC == TC_COMPLETING || stTC == TC_COMPLETED || 
+				stTC == TC_CLOSING || stTC == TC_FAILING_ACC || stTC == TC_FAILING_C || stTC == TC_NOT_COMPLETING || stTC == TC_EXITING));
+}</declaration><location id="id0" x="-936" y="-1040"><name x="-1000" y="-1064">INVALID</name></location><location id="id1" x="96" y="-384"><name x="112" y="-392">START</name><committed/></location><location id="id2" x="96" y="-1040"><label kind="invariant" x="86" y="-1025">x&lt;=TIRE_OUT+1</label></location><init ref="id1"/><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="488" y="-1224">bufferSizeTc&gt;0 &amp;&amp; buffer_Implementation == LOSSY_FIFO</label><label kind="assignment" x="488" y="-1200">bufferSizeTc--</label><nail x="736" y="-1328"/><nail x="768" y="-1232"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="288" y="-584">guard40()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="288" y="-536">action40(),
+y=0</label><nail x="328" y="-600"/><nail x="272" y="-576"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="368" y="-624">guard39()</label><label kind="assignment" x="368" y="-608">action39(),
+x=0</label><nail x="392" y="-640"/><nail x="336" y="-608"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="432" y="-680">guard38()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="432" y="-632">action38(),
+y=0</label><nail x="448" y="-688"/><nail x="400" y="-648"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="488" y="-720">guard37()</label><label kind="assignment" x="488" y="-704">action37(),
+x=0</label><nail x="496" y="-736"/><nail x="456" y="-696"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="536" y="-792">guard36()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="536" y="-752">action36(),
+y=0</label><nail x="536" y="-792"/><nail x="504" y="-744"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-568" y="-1088">guard12()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-568" y="-1040">action12(),
+y=0</label><nail x="-456" y="-1008"/><nail x="-456" y="-1080"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-376" y="-1448">guard17()</label><label kind="assignment" x="-376" y="-1432">action17(),
+x=0</label><nail x="-328" y="-1392"/><nail x="-280" y="-1440"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-544" y="-1248">guard14()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-544" y="-1200">action14(),
+y=0</label><nail x="-440" y="-1176"/><nail x="-424" y="-1240"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="184" y="-1648">guard24()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="184" y="-1608">action24(),
+y=0</label><nail x="176" y="-1576"/><nail x="240" y="-1560"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="96" y="-1656">guard23()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="96" y="-1616">action23(),
+y=0</label><nail x="96" y="-1576"/><nail x="160" y="-1576"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="16" y="-1656">guard22()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="16" y="-1608">action22(),
+y=0</label><nail x="16" y="-1568"/><nail x="80" y="-1576"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="112" y="-544">guard42()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="112" y="-496">action42(),
+y=0</label><nail x="184" y="-552"/><nail x="120" y="-544"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-56" y="-544">guard2()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-56" y="-496">action2(),
+y=0</label><nail x="8" y="-544"/><nail x="-48" y="-552"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="568" y="-856">guard35()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="568" y="-816">action35(),
+y=0</label><nail x="568" y="-856"/><nail x="544" y="-800"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="592" y="-928">guard34()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="592" y="-888">action34(),
+y=0</label><nail x="592" y="-928"/><nail x="576" y="-872"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="608" y="-1160">guard31()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="608" y="-1120">action31(),
+y=0</label><nail x="600" y="-1152"/><nail x="608" y="-1088"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="568" y="-1360">guard30()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="568" y="-1312">action30(),
+y=0</label><nail x="544" y="-1328"/><nail x="568" y="-1272"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="528" y="-1432">guard29()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="528" y="-1384">action29(),
+y=0</label><nail x="504" y="-1384"/><nail x="536" y="-1336"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="616" y="-1080">guard32()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="616" y="-1040">action32(),
+y=0</label><nail x="608" y="-1072"/><nail x="608" y="-1016"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="608" y="-1000">guard33()</label><label kind="assignment" x="608" y="-984">action33(),
+x=0</label><nail x="608" y="-1000"/><nail x="600" y="-944"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="480" y="-1464">guard28()</label><label kind="assignment" x="480" y="-1448">action28(),
+x=0</label><nail x="448" y="-1440"/><nail x="496" y="-1392"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="424" y="-1512">guard27()</label><label kind="assignment" x="424" y="-1496">action27(),
+x=0</label><nail x="384" y="-1488"/><nail x="440" y="-1448"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="352" y="-1592">guard26()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="352" y="-1544">action26(),
+y=0</label><nail x="320" y="-1528"/><nail x="376" y="-1496"/></transition><transition><source ref="id2"/><target ref="id0"/><label kind="guard" x="-912" y="-928">receive_msg_compensated_In_01234578910()</label><nail x="-592" y="-1040"/><nail x="-592" y="-904"/><nail x="-936" y="-904"/></transition><transition><source ref="id2"/><target ref="id0"/><label kind="guard" x="-888" y="-976">receive_msg_closed_In_01234678910()</label><nail x="-592" y="-1040"/><nail x="-592" y="-952"/><nail x="-936" y="-952"/></transition><transition><source ref="id2"/><target ref="id0"/><label kind="guard" x="-888" y="-1016">receive_msg_canceled_In_0345678910()</label><nail x="-592" y="-1040"/><nail x="-592" y="-992"/><nail x="-936" y="-992"/></transition><transition><source ref="id2"/><target ref="id0"/><label kind="guard" x="-896" y="-1064">receive_msg_cannot_complete_In_4567810()</label><nail x="-592" y="-1040"/></transition><transition><source ref="id2"/><target ref="id0"/><label kind="guard" x="-856" y="-1120">receive_msg_fail_In_45910()</label><nail x="-592" y="-1040"/><nail x="-592" y="-1096"/><nail x="-936" y="-1096"/></transition><transition><source ref="id2"/><target ref="id0"/><label kind="guard" x="-880" y="-1160">receive_msg_Completed_In_017910()</label><nail x="-592" y="-1040"/><nail x="-592" y="-1136"/><nail x="-936" y="-1136"/></transition><transition><source ref="id2"/><target ref="id0"/><label kind="guard" x="-864" y="-1208">receive_msg_exit_In_456789()</label><nail x="-592" y="-1040"/><nail x="-592" y="-1184"/><nail x="-936" y="-1184"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-528" y="-1152">guard13()</label><label kind="assignment" x="-528" y="-1128">action13(),
+x=0</label><nail x="-456" y="-1096"/><nail x="-448" y="-1160"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-456" y="-1408">guard16()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-456" y="-1360">action16(),
+y=0</label><nail x="-336" y="-1384"/><nail x="-376" y="-1336"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-344" y="-1520">guard18()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-344" y="-1480">action18(),
+y=0</label><nail x="-272" y="-1448"/><nail x="-224" y="-1488"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-472" y="-1312">guard15()</label><label kind="assignment" x="-472" y="-1296">action15(),
+x=0</label><nail x="-384" y="-1320"/><nail x="-416" y="-1256"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-544" y="-912">guard10()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-544" y="-864">action10(),
+y=0</label><nail x="-440" y="-920"/><nail x="-424" y="-864"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-480" y="-784">guard8()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-480" y="-736">action8(),
+y=0</label><nail x="-384" y="-792"/><nail x="-352" y="-744"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="280" y="-1632">guard25()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="280" y="-1584">action25(),
+y=0</label><nail x="248" y="-1560"/><nail x="312" y="-1536"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-240" y="-1576">guard19()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-240" y="-1528">action19(),
+y=0</label><nail x="-208" y="-1496"/><nail x="-160" y="-1520"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-64" y="-1608">guard21()</label><label kind="assignment" x="-64" y="-1592">action21(),
+x=0</label><nail x="-64" y="-1552"/><nail x="0" y="-1568"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-144" y="-1616">guard20()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-144" y="-1576">action20(),
+y=0</label><nail x="-144" y="-1528"/><nail x="-80" y="-1552"/></transition><transition><source ref="id1"/><target ref="id2"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-464" y="-848">guard9()</label><label kind="assignment" x="-464" y="-832">action9(),
+x=0</label><label kind="comments">P-46, 2nd Prepared message</label><nail x="-392" y="-800"/><nail x="-416" y="-856"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-520" y="-992">guard11()</label><label kind="assignment" x="-520" y="-968">action11(),
+x=0</label><label kind="comments">P-45, 1st Prepared message</label><nail x="-448" y="-936"/><nail x="-456" y="-1000"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-264" y="-632">guard5()</label><label kind="assignment" x="-264" y="-616">action5(),
+x=0</label><label kind="comments">p-45, 3rd Register message</label><nail x="-184" y="-608"/><nail x="-232" y="-640"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-384" y="-728">guard7()</label><label kind="assignment" x="-384" y="-712">action7(),
+x=0</label><label kind="comments">p-45, 4th Register message</label><nail x="-344" y="-736"/><nail x="-304" y="-696"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-368" y="-672">guard6()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-368" y="-624">action6(),
+y=0</label><label kind="comments">p-44, 5th TLA code module</label><nail x="-248" y="-648"/><nail x="-296" y="-688"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-200" y="-592">guard4()</label><label kind="assignment" x="-200" y="-576">action4(),
+x=0</label><label kind="comments">p-43, 4th TLA code module</label><nail x="-120" y="-576"/><nail x="-176" y="-600"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="-160" y="-560">guard3()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-160" y="-512">action3(),
+y=0</label><label kind="comments">p-43, erd TLA code module</label><nail x="-56" y="-552"/><nail x="-112" y="-568"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="32" y="-536">guard1()</label><label kind="assignment" x="32" y="-520">action1(),
+x=0</label><label kind="comments">p-43, 2nd TLA code module</label><nail x="80" y="-544"/><nail x="24" y="-544"/></transition><transition><source ref="id2"/><target ref="id2"/><label kind="guard" x="216" y="-560">guard41()</label><label kind="assignment" x="216" y="-544">action41(),
+x=0</label><label kind="comments">p-43, 1st TLA code module</label><nail x="256" y="-568"/><nail x="200" y="-552"/></transition></template><template><name>par</name><declaration>clock x,y;
+
+void Send_Msg(MsgsP s) {
+int i;
+//SET construct
+if (buffer_Implementation == SET) msgP_SET_BAG[s] = true;
+//BAG construct
+if (buffer_Implementation == BAG) {
+	if (msgP_SET_BAG[s] == BUFFER_CAPACITY) overflow = true;
+		else msgP_SET_BAG[s]++; }
+//STUTT_FIFO construct
+if (buffer_Implementation == STUTT_FIFO) {
+	if (bufferSizeP == BUFFER_CAPACITY) overflow = true;
+		else
+   		{
+			if (msgP_FIFO[0] != s and bufferSizeP&gt;0) {
+				for (i = bufferSizeP-1; i&gt;=0; i--) msgP_FIFO[i+1] = msgP_FIFO[i];
+					bufferSizeP++; msgP_FIFO[0] = s;
+                }
+            if (bufferSizeP==0) { bufferSizeP++; msgP_FIFO[0] = s;}
+   		}
+				}
+//SEQ construct
+if (buffer_Implementation == FIFO || buffer_Implementation == LOSSY_FIFO) {
+	if (bufferSizeP == BUFFER_CAPACITY) overflow = true;
+		else   		
+			{ for (i = bufferSizeP-1; i&gt;=0; i--) msgP_FIFO[i+1] = msgP_FIFO[i];
+				bufferSizeP++;
+				msgP_FIFO[0] = s; }
+		}
+}
+
+bool Receive_Msg(MsgsTC r) {
+int i;
+//SET construct
+if (buffer_Implementation == SET) return msgTC_SET_BAG[r];
+//BAG construct
+if (buffer_Implementation == BAG) return (msgTC_SET_BAG[r] &gt;= 1);
+//STUTT_FIFO construct
+if (buffer_Implementation == STUTT_FIFO) {
+	for (i=bufferSizeTc-1; i&gt;=0; i--)
+		if (msgTC_FIFO[i] == r) return true;
+			return false; }
+//SEQ construct
+if (buffer_Implementation == FIFO || buffer_Implementation == LOSSY_FIFO) {
+    if (bufferSizeTc==0) return false;
+	return (msgTC_FIFO[bufferSizeTc-1] == r); }
+return false;
+}
+
+void Received_Msg(MsgsTC r) {
+int i;
+//SET construct
+//if (buffer_Implementation == SET) return ;
+//BAG construct
+if (buffer_Implementation == BAG) msgTC_SET_BAG[r]--;
+//STUTT_FIFO construct
+if (buffer_Implementation == STUTT_FIFO) {
+        i = 0; 
+	while (msgTC_FIFO[i] != r) i++; // msgTC_SEQ[0,i-1] != r
+                bufferSizeTc--;  
+        }
+//SEQ construct
+if (buffer_Implementation == FIFO || buffer_Implementation == LOSSY_FIFO) {
+	bufferSizeTc--; }
+}
+
+//Messages transmitted by the Participant
+
+bool guard43() {
+return stP == P_ACTIVE || stP == P_COMPLETING;
+}
+void action43() {
+Send_Msg(EXIT_P);
+stP = P_EXITING;
+}
+
+bool guard44() {
+return stP == P_EXITING;
+}
+void action44() {
+Send_Msg(EXIT_P);
+}
+
+bool guard45() {
+return stP == P_COMPLETING;
+}
+void action45() {
+Send_Msg(COMPLETED_P);
+stP = P_COMPLETED;
+}
+
+bool guard46() {
+return stP == P_COMPLETED;
+}
+void action46() {
+Send_Msg(COMPLETED_P);
+}
+
+bool guard47() {
+return stP == P_ACTIVE || stP == P_CANCELING || stP == P_COMPLETING;
+}
+void action47() {
+Send_Msg(FAIL_P);
+stP = P_FAILING_ACC;
+}
+
+bool guard48() {
+return stP == P_COMPENSATING;
+}
+void action48() {
+Send_Msg(FAIL_P);
+stP = P_FAILING_C;
+}
+
+bool guard49() {
+return stP == P_FAILING_ACC || stP == P_FAILING_C;
+}
+void action49() {
+Send_Msg(FAIL_P);
+}
+
+bool guard50() {
+return stP == P_ACTIVE || stP == P_COMPLETING;
+}
+void action50() {
+Send_Msg(CANNOT_COMPLETE_P);
+stP = P_NOT_COMPLETING;
+}
+
+bool guard51() {
+return stP == P_NOT_COMPLETING;
+}
+void action51() {
+Send_Msg(CANNOT_COMPLETE_P);
+}
+
+bool guard52() {
+return stP == P_CANCELING;
+}
+void action52() {
+Send_Msg(CANCELED_P);
+stP = P_ENDED_CANCELED;
+}
+
+bool guard53() {
+return stP == P_ENDED_CANCELED;
+}
+void action53() {
+Send_Msg(CANCELED_P);
+}
+
+bool guard54() {
+return stP == P_CLOSING;
+}
+void action54() {
+Send_Msg(CLOSED_P);
+stP = P_ENDED_CLOSED;
+}
+
+bool guard55() {
+return stP == P_ENDED_CLOSED;
+}
+void action55() {
+Send_Msg(CLOSED_P);
+}
+
+bool guard56() {
+return stP == P_COMPENSATING;
+}
+void action56() {
+Send_Msg(COMPENSATED_P);
+stP = P_ENDED_COMPENSATED;
+}
+
+bool guard57() {
+return stP == P_ENDED_COMPENSATED;
+}
+void action57() {
+Send_Msg(COMPENSATED_P);
+}
+//Messages received by the Participant
+
+bool guard58() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; (stP == P_ACTIVE || stP == P_COMPLETING);
+}
+void action58() {
+stP = P_CANCELING;
+Received_Msg(CANCEL_TC);
+}
+
+bool guard59() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_CANCELING;
+}
+void action59() {
+Received_Msg(CANCEL_TC);
+}
+
+bool guard60() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_COMPLETED;
+}
+void action60() {
+Send_Msg(COMPLETED_P);
+Received_Msg(CANCEL_TC);
+}
+
+bool guard61() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_CLOSING;
+}
+void action61() {
+Received_Msg(CANCEL_TC);
+}
+
+bool guard62() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_COMPENSATING;
+}
+void action62() {
+Received_Msg(CANCEL_TC);
+}
+
+bool guard63() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_FAILING_ACC;
+}
+void action63() {
+Send_Msg(FAIL_P);
+Received_Msg(CANCEL_TC);
+}
+
+bool guard64() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_FAILING_C;
+}
+void action64() {
+Received_Msg(CANCEL_TC);
+}
+
+bool guard65() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_NOT_COMPLETING;
+}
+void action65() {
+Send_Msg(CANNOT_COMPLETE_P);
+Received_Msg(CANCEL_TC);
+}
+
+bool guard66() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_EXITING;
+}
+void action66() {
+Send_Msg(EXIT_P);
+Received_Msg(CANCEL_TC);
+}
+
+bool guard67() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; stP == P_ENDED_CANCELED;
+}
+void action67() {
+Send_Msg(CANCELED_P);
+Received_Msg(CANCEL_TC);
+}
+
+bool guard68() {
+return Receive_Msg(CANCEL_TC) &amp;&amp; (stP == P_ENDED_CLOSED || stP == P_ENDED_COMPENSATED || stP == P_ENDED);
+}
+void action68() {
+Received_Msg(CANCEL_TC);
+}
+
+bool guard69() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_ACTIVE;
+}
+void action69() {
+stP = P_COMPLETING;
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard70() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_CANCELING;
+}
+void action70() {
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard71() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_COMPLETING;
+}
+void action71() {
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard72() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_COMPLETED;
+}
+void action72() {
+Send_Msg(COMPLETED_P);
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard73() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_CLOSING;
+}
+void action73() {
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard74() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_COMPENSATING;
+}
+void action74() {
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard75() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_FAILING_ACC;
+}
+void action75() {
+Send_Msg(FAIL_P);
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard76() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_FAILING_C;
+}
+void action76() {
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard77() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_NOT_COMPLETING;
+}
+void action77() {
+Send_Msg(CANNOT_COMPLETE_P);
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard78() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_EXITING;
+}
+void action78() {
+Send_Msg(EXIT_P);
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard79() {
+return Receive_Msg(COMPLETE_TC) &amp;&amp; (stP == P_ENDED_CANCELED || stP == P_ENDED_CLOSED || stP == P_ENDED_COMPENSATED);
+}
+void action79() {
+Send_Msg(FAIL_P);
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard80() { //guardEnded()
+return Receive_Msg(COMPLETE_TC) &amp;&amp; stP == P_ENDED;
+}
+void action80() {
+Received_Msg(COMPLETE_TC);
+}
+
+bool guard81() {
+return Receive_Msg(CLOSE_TC) &amp;&amp; stP == P_COMPLETED;
+}
+void action81() {
+stP = P_CLOSING;
+Received_Msg(CLOSE_TC);
+}
+
+bool guard82() {
+return Receive_Msg(CLOSE_TC) &amp;&amp; stP == P_CLOSING;
+}
+void action82() {
+Received_Msg(CLOSE_TC);
+}
+
+bool guard83() {
+return Receive_Msg(CLOSE_TC) &amp;&amp; (stP == P_ENDED_CANCELED || stP == P_ENDED_COMPENSATED || stP == P_ENDED);
+}
+void action83() {
+Received_Msg(CLOSE_TC);
+}
+
+bool guard84() {
+return Receive_Msg(CLOSE_TC) &amp;&amp; stP == P_ENDED_CLOSED;
+}
+void action84() {
+Send_Msg(CLOSED_P);
+Received_Msg(CLOSE_TC);
+}
+
+bool guard85() {
+return Receive_Msg(COMPENSATE_TC) &amp;&amp; stP == P_COMPLETED;
+}
+void action85() {
+stP = P_COMPENSATING;
+Received_Msg(COMPENSATE_TC);
+}
+
+bool guard86() {
+return Receive_Msg(COMPENSATE_TC) &amp;&amp; stP == P_COMPENSATING;
+}
+void action86() {
+Received_Msg(COMPENSATE_TC);
+}
+
+bool guard87() {
+return Receive_Msg(COMPENSATE_TC) &amp;&amp; stP == P_FAILING_C;
+}
+void action87() {
+Send_Msg(FAIL_P);
+Received_Msg(COMPENSATE_TC);
+}
+
+bool guard88() {
+return Receive_Msg(COMPENSATE_TC) &amp;&amp; (stP == P_ENDED_CANCELED || stP == P_ENDED_CLOSED || stP == P_ENDED);
+}
+void action88() {
+Received_Msg(COMPENSATE_TC);
+}
+
+bool guard89() {
+return Receive_Msg(COMPENSATE_TC) &amp;&amp; stP == P_ENDED_COMPENSATED;
+}
+void action89() {
+Send_Msg(COMPENSATED_P);
+Received_Msg(COMPENSATE_TC);
+}
+
+//bool guard95() {
+//return Receive_Msg(FAILED_TC) &amp;&amp; (stP == P_FAILING_ACC || stP == P_FAILING_C);
+//}
+//void action95() {
+//stP = P_ENDED_CANCELED;
+//Received_Msg(FAILED_TC);
+//}
+
+//bool guard96() {
+//return  Receive_Msg(FAILED_TC) &amp;&amp; (stP == P_FAILING_ACC || stP == P_FAILING_C);
+//}
+//void action96() {
+//stP = P_ENDED_CLOSED;
+//Received_Msg(FAILED_TC);
+//}
+
+bool guard90() {
+return  Receive_Msg(FAILED_TC) &amp;&amp; (stP == P_FAILING_ACC || stP == P_FAILING_C);
+}
+void action90() {
+stP = P_ENDED;
+Received_Msg(FAILED_TC);
+}
+
+bool guard91() {
+return Receive_Msg(FAILED_TC) &amp;&amp; (stP == P_ENDED_CANCELED || stP == P_ENDED_CLOSED || stP == P_ENDED_COMPENSATED || stP == P_ENDED);
+}
+void action91() {
+Received_Msg(FAILED_TC);
+}
+
+//bool guard99() {
+//return Receive_Msg(EXITED_TC) &amp;&amp; stP == P_EXITING;
+//}
+//void action99() {
+//stP = P_ENDED_CANCELED;
+//Received_Msg(EXITED_TC);
+//}
+
+//bool guard100() {
+//return Receive_Msg(EXITED_TC) &amp;&amp; stP == P_EXITING;
+//}
+//void action100() {
+//stP = P_ENDED_CLOSED;
+//Received_Msg(EXITED_TC);
+//}
+
+bool guard92() {
+return Receive_Msg(EXITED_TC) &amp;&amp; stP == P_EXITING;
+}
+void action92() {
+stP = P_ENDED;
+Received_Msg(EXITED_TC);
+}
+
+bool guard93() {
+return Receive_Msg(EXITED_TC) &amp;&amp; (stP == P_ENDED_CANCELED || stP == P_ENDED_CLOSED || stP == P_ENDED_COMPENSATED || stP == P_ENDED);
+}
+void action93() {
+Received_Msg(EXITED_TC);
+}
+
+//bool guard103() {
+//return Receive_Msg(NOT_COMPLETED_TC) &amp;&amp; stP == P_NOT_COMPLETING;
+//}
+//void action103() {
+//stP = P_ENDED_CANCELED;
+//Received_Msg(NOT_COMPLETED_TC);
+//}
+
+//bool guard104() {
+//return Receive_Msg(NOT_COMPLETED_TC) &amp;&amp; stP == P_NOT_COMPLETING;
+//}
+//void action104() {
+//stP = P_ENDED_CLOSED;
+//Received_Msg(NOT_COMPLETED_TC);
+//}
+
+bool guard94() {
+return Receive_Msg(NOT_COMPLETED_TC) &amp;&amp; stP == P_NOT_COMPLETING;
+}
+void action94() {
+stP = P_ENDED;
+Received_Msg(NOT_COMPLETED_TC);
+}
+
+bool guard95() {
+return Receive_Msg(NOT_COMPLETED_TC) &amp;&amp; (stP == P_ENDED_CANCELED || stP == P_ENDED_CLOSED || stP == P_ENDED_COMPENSATED || stP == P_ENDED);
+}
+void action95() {
+Received_Msg(NOT_COMPLETED_TC);
+}
+
+bool receive_close_In_01256789() {
+return Receive_Msg(CLOSE_TC) &amp;&amp; (stP == P_ACTIVE || stP == P_CANCELING || stP == P_COMPLETING || stP == P_COMPENSATING || stP == P_FAILING_ACC || stP == P_FAILING_C || stP == P_NOT_COMPLETING || stP == P_EXITING);
+}
+
+bool receive_compensate_In_0124689() {
+return Receive_Msg(COMPENSATE_TC) &amp;&amp; (stP == P_ACTIVE || stP == P_CANCELING || stP == P_COMPLETING || stP == P_CLOSING || stP == P_FAILING_ACC || stP == P_NOT_COMPLETING || stP == P_EXITING);
+}
+
+bool receive_failed_In_01234589() {
+return Receive_Msg(FAILED_TC) &amp;&amp; (stP == P_ACTIVE || stP == P_CANCELING || stP == P_COMPLETING || stP == P_COMPLETED || stP == P_CLOSING || stP == P_COMPENSATING || stP == P_NOT_COMPLETING || stP == P_EXITING);
+}
+
+bool receive_exited_In_012345678() {
+return Receive_Msg(EXITED_TC) &amp;&amp; (stP == P_ACTIVE || stP == P_CANCELING || stP == P_COMPLETING || stP == P_COMPLETED || stP == P_CLOSING || stP == P_COMPENSATING || 
+												stP == P_FAILING_ACC || stP == P_FAILING_C || stP == P_NOT_COMPLETING);
+}
+
+bool receive_NotCompleted_In_012345679() {
+return Receive_Msg(NOT_COMPLETED_TC) &amp;&amp; (stP == P_ACTIVE || stP == P_CANCELING || stP == P_COMPLETING || stP == P_COMPLETED || stP == P_CLOSING || stP == P_COMPENSATING || 
+												stP == P_FAILING_ACC || stP == P_FAILING_C || stP == P_EXITING);
+} </declaration><location id="id3" x="-1032" y="-1040"><name x="-1096" y="-1064">INVALID</name></location><location id="id4" x="96" y="-264"><name x="112" y="-272">START</name><committed/></location><location id="id5" x="96" y="-1040"><label kind="invariant" x="86" y="-1025">x&lt;=TIRE_OUT+1</label></location><init ref="id4"/><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="704" y="-1432">guard80()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="704" y="-1384">action80(),
+y=0</label><nail x="672" y="-1408"/><nail x="704" y="-1344"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="568" y="-1248">bufferSizeP&gt;0 &amp;&amp; buffer_Implementation == LOSSY_FIFO</label><label kind="assignment" x="568" y="-1232">bufferSizeP--</label><nail x="808" y="-1368"/><nail x="848" y="-1240"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="120" y="-376">guard95()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="120" y="-328">action95(),
+y=0</label><nail x="184" y="-384"/><nail x="112" y="-376"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="216" y="-384">guard94()</label><label kind="assignment" x="216" y="-368">action94(),
+x=0</label><nail x="264" y="-400"/><nail x="200" y="-384"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="296" y="-416">guard93()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="296" y="-368">action93(),
+y=0</label><nail x="344" y="-432"/><nail x="280" y="-408"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="376" y="-456">guard92()</label><label kind="assignment" x="376" y="-440">action92(),
+x=0</label><nail x="408" y="-464"/><nail x="352" y="-440"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="448" y="-496">guard91()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="448" y="-456">action91(),
+y=0</label><nail x="480" y="-512"/><nail x="416" y="-472"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="520" y="-552">guard90()</label><label kind="assignment" x="520" y="-536">action90(),
+x=0</label><nail x="544" y="-568"/><nail x="488" y="-520"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-72" y="-1784">guard70()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-72" y="-1736">action70(),
+y=0</label><nail x="-80" y="-1696"/><nail x="-8" y="-1712"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-152" y="-1736">guard69()</label><label kind="assignment" x="-152" y="-1720">action69(),
+x=0</label><nail x="-152" y="-1680"/><nail x="-96" y="-1696"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-344" y="-1688">guard67()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-344" y="-1640">action67(),
+y=0</label><nail x="-296" y="-1608"/><nail x="-240" y="-1640"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="632" y="-688">guard88()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="632" y="-640">action88(),
+y=0</label><nail x="640" y="-688"/><nail x="600" y="-632"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="744" y="-960">guard84()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="744" y="-920">action84(),
+y=0</label><nail x="744" y="-960"/><nail x="728" y="-896"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="760" y="-1128">guard82()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="760" y="-1080">action82(),
+y=0</label><nail x="752" y="-1112"/><nail x="752" y="-1048"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="656" y="-1520">guard79()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="656" y="-1472">action79(),
+y=0</label><nail x="624" y="-1480"/><nail x="664" y="-1424"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="536" y="-1656">guard77()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="536" y="-1608">action77(),
+y=0</label><nail x="504" y="-1600"/><nail x="560" y="-1552"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="584" y="-616">guard89()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="584" y="-568">action89(),
+y=0</label><nail x="592" y="-624"/><nail x="552" y="-576"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="680" y="-752">guard87()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="680" y="-712">action87(),
+y=0</label><nail x="680" y="-752"/><nail x="648" y="-696"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="712" y="-824">guard86()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="712" y="-784">action86(),
+y=0</label><nail x="712" y="-824"/><nail x="688" y="-760"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="384" y="-1744">guard75()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="384" y="-1704">action75(),
+y=0</label><nail x="352" y="-1688"/><nail x="424" y="-1656"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="728" y="-880">guard85()</label><label kind="assignment" x="728" y="-864">action85(),
+x=0</label><nail x="728" y="-888"/><nail x="712" y="-832"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="760" y="-1040">guard83()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="760" y="-1000">action83(),
+y=0</label><nail x="752" y="-1032"/><nail x="744" y="-968"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="752" y="-1184">guard81()</label><label kind="assignment" x="760" y="-1168">action81(),
+x=0</label><nail x="744" y="-1192"/><nail x="752" y="-1120"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="600" y="-1592">guard78()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="600" y="-1544">action78(),
+y=0</label><nail x="568" y="-1544"/><nail x="616" y="-1488"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="456" y="-1712">guard76()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="456" y="-1664">action76(),
+y=0</label><nail x="440" y="-1648"/><nail x="496" y="-1608"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="296" y="-1776">guard74()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="296" y="-1736">action74(),
+y=0</label><nail x="264" y="-1712"/><nail x="336" y="-1688"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="192" y="-1792">guard73()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="192" y="-1752">action73(),
+y=0</label><nail x="176" y="-1720"/><nail x="248" y="-1712"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-248" y="-1744">guard68()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-248" y="-1696">action68(),
+y=0</label><nail x="-232" y="-1648"/><nail x="-168" y="-1680"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="104" y="-1800">guard72()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="104" y="-1752">action72(),
+y=0</label><nail x="96" y="-1720"/><nail x="160" y="-1720"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="16" y="-1800">guard71()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="16" y="-1752">action71(),
+y=0</label><nail x="8" y="-1712"/><nail x="80" y="-1720"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-424" y="-1624">guard66()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-424" y="-1576">action66(),
+y=0</label><nail x="-360" y="-1552"/><nail x="-304" y="-1600"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-496" y="-1560">guard65()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-496" y="-1520">action65(),
+y=0</label><nail x="-416" y="-1496"/><nail x="-368" y="-1544"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-552" y="-1504">guard64()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-552" y="-1464">action64(),
+y=0</label><nail x="-464" y="-1440"/><nail x="-424" y="-1488"/></transition><transition><source ref="id5"/><target ref="id3"/><label kind="guard" x="-976" y="-976">receive_NotCompleted_In_012345679()</label><nail x="-688" y="-1040"/><nail x="-688" y="-952"/><nail x="-1032" y="-952"/></transition><transition><source ref="id5"/><target ref="id3"/><label kind="guard" x="-960" y="-1016">receive_exited_In_012345678()</label><nail x="-688" y="-1040"/><nail x="-688" y="-992"/><nail x="-1032" y="-992"/></transition><transition><source ref="id5"/><target ref="id3"/><label kind="guard" x="-952" y="-1064">receive_failed_In_01234589()</label><nail x="-688" y="-1040"/></transition><transition><source ref="id5"/><target ref="id3"/><label kind="guard" x="-968" y="-1120">receive_compensate_In_0124689()</label><nail x="-688" y="-1040"/><nail x="-688" y="-1096"/><nail x="-1032" y="-1096"/></transition><transition><source ref="id5"/><target ref="id3"/><label kind="guard" x="-952" y="-1160">receive_close_In_01256789()</label><nail x="-688" y="-1040"/><nail x="-688" y="-1136"/><nail x="-1032" y="-1136"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-632" y="-904">guard56()</label><label kind="assignment" x="-632" y="-888">action56(),
+x=0</label><nail x="-560" y="-864"/><nail x="-576" y="-920"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-648" y="-1064">guard58()</label><label kind="assignment" x="-648" y="-1040">action58(),
+x=0</label><nail x="-584" y="-1064"/><nail x="-584" y="-1008"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-672" y="-1144">guard59()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-672" y="-1096">action59(),
+y=0</label><nail x="-584" y="-1080"/><nail x="-576" y="-1144"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-680" y="-984">guard57()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-680" y="-936">action57(),
+y=0</label><nail x="-584" y="-992"/><nail x="-576" y="-936"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-584" y="-760">guard54()</label><label kind="assignment" x="-584" y="-744">action54(),
+x=0</label><nail x="-528" y="-776"/><nail x="-504" y="-720"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-512" y="-640">guard52()</label><label kind="assignment" x="-512" y="-624">action52(),
+x=0</label><nail x="-464" y="-656"/><nail x="-432" y="-608"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-600" y="-1440">guard63()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-600" y="-1400">action63(),
+y=0</label><nail x="-504" y="-1376"/><nail x="-472" y="-1432"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-688" y="-1224">guard60()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-688" y="-1176">action60(),
+y=0</label><nail x="-576" y="-1160"/><nail x="-568" y="-1216"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-632" y="-1376">guard62()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-632" y="-1328">action62(),
+y=0</label><nail x="-536" y="-1304"/><nail x="-512" y="-1368"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-664" y="-1296">guard61()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-664" y="-1256">action61(),
+y=0</label><nail x="-560" y="-1232"/><nail x="-544" y="-1288"/></transition><transition><source ref="id4"/><target ref="id5"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-112" y="-384">guard45()</label><label kind="assignment" x="-112" y="-368">action45(),
+x=0</label><label kind="comments">p-48, 1st Committed message</label><nail x="-48" y="-384"/><nail x="-104" y="-400"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="24" y="-376">guard43()</label><label kind="assignment" x="24" y="-360">action43(),
+x=0</label><label kind="comments">p-47, 1st Aborted message</label><nail x="24" y="-376"/><nail x="80" y="-376"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-592" y="-704">guard53()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-592" y="-656">action53(),
+y=0</label><label kind="comments">P-46, 2nd Prepared message</label><nail x="-472" y="-664"/><nail x="-496" y="-712"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-656" y="-840">guard55()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-656" y="-792">action55(),
+y=0</label><label kind="comments">P-45, 1st Prepared message</label><nail x="-536" y="-792"/><nail x="-552" y="-848"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-408" y="-504">guard49()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-408" y="-456">action49(),
+y=0</label><label kind="comments">p-45, 3rd Register message</label><nail x="-288" y="-472"/><nail x="-328" y="-504"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-504" y="-592">guard51()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-504" y="-544">action51(),
+y=0</label><label kind="comments">p-45, 4th Register message</label><nail x="-424" y="-600"/><nail x="-384" y="-560"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-424" y="-544">guard50()</label><label kind="assignment" x="-424" y="-528">action50(),
+x=0</label><label kind="comments">p-44, 5th TLA code module</label><nail x="-336" y="-512"/><nail x="-376" y="-552"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-320" y="-456">guard48()</label><label kind="assignment" x="-320" y="-440">action48(),
+x=0</label><label kind="comments">p-43, 4th TLA code module</label><nail x="-232" y="-448"/><nail x="-280" y="-472"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-256" y="-432">guard47()</label><label kind="assignment" x="-256" y="-416">action47(),
+x=0</label><label kind="comments">p-43, erd TLA code module</label><nail x="-176" y="-416"/><nail x="-224" y="-440"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-200" y="-400">guard46()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-200" y="-352">action46(),
+y=0</label><label kind="comments">p-43, 2nd TLA code module</label><nail x="-112" y="-400"/><nail x="-168" y="-416"/></transition><transition><source ref="id5"/><target ref="id5"/><label kind="guard" x="-48" y="-376">guard44()&amp;&amp;
+x&lt;=TIRE_OUT&amp;&amp;
+y&gt;=MIN_DELAY</label><label kind="assignment" x="-48" y="-328">action44(),
+y=0</label><label kind="comments">p-43, 1st TLA code module</label><nail x="16" y="-376"/><nail x="-40" y="-384"/></transition></template><system>tc = Coordinator();
+//p = Participant_T();
+system tc, par;</system></nta>

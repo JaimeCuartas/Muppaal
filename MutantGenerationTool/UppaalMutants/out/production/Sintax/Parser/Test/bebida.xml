@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration> </declaration>
+	<template>
+		<name x="5" y="5">Template</name>
+		<declaration> </declaration>
+		<location id="id0" x="0" y="0">
+		</location>
+		<location id="id1" x="127" y="0">
+			<label kind="invariant" x="144" y="-8">t&lt;=5</label>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="51" y="34">t&lt;=2</label>
+			<label kind="synchronisation" x="42" y="17">agua!</label>
+			<nail x="110" y="59"/>
+			<nail x="17" y="59"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="51" y="-85">t&gt;2</label>
+			<label kind="synchronisation" x="42" y="-102">cafe!</label>
+			<nail x="110" y="-59"/>
+			<nail x="17" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="34" y="-34">moneda?</label>
+			<label kind="assignment" x="51" y="-17">t=0</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Process = Template();
+// List one or more processes to be composed into a system.
+system Process;
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

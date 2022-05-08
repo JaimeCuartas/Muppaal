@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+
+<nta>
+
+    <declaration>
+
+        /** Jaime Cuartas Granada*/
+    </declaration>
+    <template>
+        <name>nombre_De_Template</name>
+        < parameter > const int timeToDeploy, const int timeToRetract</parameter>
+        <declaration>sefseeij{G
+
+        </declaration>
+
+        <location id="inicial" x="1" y="1">
+            <name x="-612" y="-51">uno</name>
+        </location>
+        <location id="inicial" x="2" y="2">
+            <name x="-612" y="-51"></name>
+            <committed/>
+        </location>
+        <location id="inicial" x="3" y="3">
+            <name>nombre_De_Loc</name>
+            <label kind="invariant" x="425" y="127">12</label>
+            <label kind="exponentialrate" x="424" y="121">123</label>
+            <label kind="testcodeEnter">entrada codigo prueba</label>
+            <label kind="testcodeExit">salida codigo prueba</label>
+            <label kind="comments" x="256" y="177">Es el comentario</label>
+
+            <committed/>
+        </location>
+        <location id="inicial" x="4" y="4"><urgent/></location>
+
+        <init ref =   "inicial"   />
+
+        <transition>
+            <source ref="id0"/>
+            <target ref="id1"/>
+            <label kind="guard" x="2" y="2"> ((+e[2]' &lt; q) ==3) ? 2&lt;1: 2 and (2-1 &gt;10)</label>
+            <label kind= "otro" > </label>
+
+        </transition>
+        <transition>
+            <source ref="id0"/>
+            <target ref="id1"/>
+            <label kind="guard" x="2" y="2"> sum(x: int[12&gt;2,32]) x&lt;2 </label>
+            <label kind= "otro" > 5==2 </label>
+
+        </transition>
+    </template>
+    <system>// Place template instantiations here.
+        sefsefse mxz A&lt; e
+
+    </system>
+    <queries>
+        <query>
+            <formula>A[] (TramBridge.deploying or TramBridge.retracting) imply (not (TramDoor.opened))</formula>
+            <comment>For all paths the actions (deploying or retracting) of the bridge imply that the door is not open</comment>
+        </query>
+        <query>
+            <formula>A[] (Controller.traveling) imply ((not (TramDoor.opened)) and (not (TramBridge.deployed)))</formula>
+            <comment>For all paths the Tram is traveling with its door not open and its bridge not deployed</comment>
+        </query>
+        <query>
+            <formula>A[] not deadlock</formula>
+            <comment>The system is deadlock-free</comment>
+        </query>
+    </queries>
+</nta>

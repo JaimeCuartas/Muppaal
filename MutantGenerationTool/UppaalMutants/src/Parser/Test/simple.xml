@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+    <declaration>/**
+        * Jaime Cuartas Granada*/
+
+        chan requestBridge, requestDoor;
+
+        broadcast chan deployAction, endDeployAction, retractAction, endRetractAction, openAction, endOpenAction, closeAction, endCloseAction; </declaration>
+    <template>
+        <name> nombre
+        </name>
+
+        <parameter>const int timeToDeploy, const int timeToRetract</parameter>
+        <declaration>clock timesefvvgvg;</declaration>
+
+        <location id="inicial" x="2" y="3">
+            <name>nombre_De_Loc</name>
+            <label kind="invariant" x="425" y="127">12</label>
+            <label kind="exponentialrate" x="424" y="121">123</label>
+            <label kind="testcodeEnter">entrada codigo prueba</label>
+            <label kind="testcodeExit">salida codigo prueba</label>
+            <label kind="comments" x="256" y="177">Es el comentario</label>
+
+            <committed/>
+        </location>
+        <init ref = "inicial"/>
+        <transition>
+            <source ref="id0"/>
+            <target ref="id1"/>
+            <label kind="select" x="0" y="-170">seleccion prueba</label>
+            <label kind="guard" x="0" y="-153">guard </label>
+            <label kind="synchronisation" x="0" y="-136">sync!</label>
+            <label kind="assignment" x="0" y="-119">update prueba
+                con dos renglones</label>
+            <label kind="testcode">probar codigo del edge
+                con dos renglones</label>
+            <label kind="comments" x="0" y="-94">estos son puros comentarios
+                jejej
+                de varios renglones</label>
+            <nail x="93" y="144"/>
+        </transition>
+    </template>
+    <system>// Place template instantiations here.
+
+        const int timeToOpen = 5;
+        const int timeToClose = 5;
+
+        TramDoor = Door(timeToOpen, timeToClose);
+
+
+        const int timeToDeploy = 3;
+        const int timeToRetract = 3;
+
+        TramBridge = Bridge(timeToDeploy, timeToRetract);
+
+        BridgeButton = Button(requestBridge, deployAction, endDeployAction);
+        DoorButton = Button(requestDoor, openAction, endOpenAction);
+
+        // List one or more processes to be composed into a system.
+        system Controller, TramDoor, TramBridge, BridgeButton, DoorButton;
+    </system>
+    <queries>
+        <query>
+            <formula>A[] (TramBridge.deploying or TramBridge.retracting) imply (not (TramDoor.opened))</formula>
+            <comment>For all paths the actions (deploying or retracting) of the bridge imply that the door is not open</comment>
+        </query>
+        <query>
+            <formula>A[] (Controller.traveling) imply ((not (TramDoor.opened)) and (not (TramBridge.deployed)))</formula>
+            <comment>For all paths the Tram is traveling with its door not open and its bridge not deployed</comment>
+        </query>
+        <query>
+            <formula>A[] not deadlock</formula>
+            <comment>The system is deadlock-free</comment>
+        </query>
+    </queries>
+</nta>

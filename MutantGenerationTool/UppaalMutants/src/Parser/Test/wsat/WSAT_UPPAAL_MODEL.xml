@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_1.dtd'><nta><declaration>// [1] J.E. Johnson, D.E. Langworthy, L.Lamport, F.H. Vogt. "Formal specification of a Web services protocol"
+//Participant declaration - Corresponding TLA description on page-40
+const int NO_OF_PARTICIPANTS = 2; 
+typedef int[0,NO_OF_PARTICIPANTS-1] Participant; 
+
+//States of the Initiator. Corresponding TLA description on page-40 in [1]
+typedef int[0,3] StateI;
+const StateI I_ACTIVE = 0;
+const StateI I_COMMITTED = 1;
+const StateI I_ABORTED = 2;
+const StateI I_COMPLETING = 3;
+
+//initial predicate for Initiator. Corresponding TLA description on page-42 in [1]
+StateI iState = I_ACTIVE;
+
+//States of the TC. Corresponding TLA description on page-41 in [1]
+typedef int[0,5] StateTC;
+const StateTC TC_ACTIVE = 0;
+const StateTC TC_PREPARING_VOLATILE = 1;
+const StateTC TC_PREPARING_DURABLE = 2;
+const StateTC TC_ABORTING = 3;
+const StateTC TC_COMMITTING =4;
+const StateTC TC_ENDED = 5;
+
+//TC's knowledge of the registratin states of the participant. Corresponding TLA description on page-41 in [1]
+typedef int[0,5] RegTC;
+const RegTC TC_UNREGISTERED = 0;
+const RegTC TC_VOLATILE = 1;
+const RegTC TC_DURABLE = 2;
+const RegTC TC_PREPARED = 3;
+const RegTC TC_READ_ONLY = 4;
+const RegTC TC_COMMITTED = 5;
+
+//TC's outcome for the protocol. Corresponding TLA description on page-41 in [1]
+typedef int[0,1] ResTC;
+const ResTC TC_ABORTED_RES = 0;
+const ResTC TC_COMMITTED_RES = 1;
+
+typedef struct {StateTC st; RegTC reg[Participant]; ResTC res;} DataTC;
+DataTC tcData;
+
+//States of the Participant. Corresponding TLA description on page-41 in [1]
+typedef int[0,5] StateP;
+const StateP P_UNREGISTERED = 0;
+const StateP P_PREPARED = 1;
+const StateP P_REGISTERING = 2;
+const StateP P_ACTIVE = 3;
+const StateP P_PREPARING = 4;
+const StateP P_ENDED = 5;
+
+//Registration types of the Participant. Corresponding TLA description on page-41 in [1]
+typedef int[0,1] RegP; 
+const RegP P_VOLATILE = 0;
+const RegP P_DURABLE = 1;
+
+//Participants outcome for the protocol. Corresponding TLA description on page-41 in [1]
+typedef int[0,2] ResP; 
+const ResP P_READ_ONLY = 0;
+const ResP P_COMMITTED = 1;
+const ResP P_ABORTED = 2;
+
+typedef struct {StateP st; RegP reg; ResP res;} DataP;
+DataP pData[Participant];
+
+/** Boolean Arrays */
+//Messages sent from TC to Participant. Corresponding TLA description on page-40 in [1]
+typedef int[0,3] MsgsTC;
+const MsgsTC REGISTER_RESPONSE = 0;
+const MsgsTC PREPARE = 1;
+const MsgsTC COMMIT = 2;
+const MsgsTC ROLLBACK =3;
+
+bool msgDest[Participant][MsgsTC] ;
+
+//Messages sent from Participant to TC. Corresponding TLA description on page-40 in [1]
+typedef int[0,5] MsgsP;
+const MsgsP PREPARED = 0;
+const MsgsP READ_ONLY = 1;
+const MsgsP COMMITTED = 2;
+const MsgsP ABORTED = 3;
+const MsgsP REGISTER_VOLATILE = 4;
+const MsgsP REGISTER_DURABLE = 5;
+
+bool msgSrc[Participant][MsgsP];
+
+typedef int[REGISTER_VOLATILE,REGISTER_DURABLE] Reg;
+Reg regMsgType;
+
+/** Consistency Checking **/
+//Corresponding Consistency property on page-42 in [1]
+bool AllParticipantsCommitted() {
+int p;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (!(pData[p].st == P_UNREGISTERED || 
+		(pData[p].st == P_ENDED &amp;&amp; (pData[p].res == P_READ_ONLY || pData[p].res == P_COMMITTED)))) return false;
+return true; }
+
+
+bool AllParticipantsCommitting() {
+int p;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (!((pData[p].st == P_UNREGISTERED || pData[p].st == P_PREPARED) ||  
+		(pData[p].st == P_ENDED &amp;&amp; (pData[p].res == P_READ_ONLY || pData[p].res == P_COMMITTED)))) return false;
+return true; }
+
+
+bool InitiatorCommittedOK() {
+return iState != I_COMMITTED ||
+	(tcData.st == TC_ENDED &amp;&amp; tcData.res == TC_COMMITTED_RES &amp;&amp; AllParticipantsCommitted()) ||
+(tcData.st == TC_COMMITTING &amp;&amp; AllParticipantsCommitting());
+}
+
+bool InitCoorCommittedOrCommitting() {
+return iState == I_COMMITTED &amp;&amp; ((tcData.st == TC_ENDED &amp;&amp; tcData.res == TC_COMMITTED_RES) || tcData.st == TC_COMMITTING);
+}
+
+bool ParticipantCommittedOK() {
+int p;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+ if (pData[p].st == P_ENDED &amp;&amp; pData[p].res == P_COMMITTED) {
+	if (!InitCoorCommittedOrCommitting() || !AllParticipantsCommitting())  return false;
+}
+return true; }
+
+bool Consistency() {
+return InitiatorCommittedOK() &amp;&amp; ParticipantCommittedOK();
+}</declaration><template><name>InitCoor</name><declaration>// [1] J.E. Johnson, D.E. Langworthy, L.Lamport, F.H. Vogt. "Formal specification of a Web services protocol"
+
+//initial predicate for TC. page-42 in [1]
+void initial() {
+int  p;
+tcData.st = TC_ACTIVE;
+tcData.res = TC_COMMITTED_RES;
+for(p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+tcData.reg[p] = TC_UNREGISTERED;
+}
+
+//1st TLA rule on page-43 in [1]
+bool guard1_1() {
+int pp;
+for(pp=0; pp&lt;NO_OF_PARTICIPANTS; pp++)
+  if ((pData[pp].st == P_ACTIVE || pData[pp].st == P_PREPARING) &amp;&amp; pData[pp].reg == P_VOLATILE) return true;
+return false;
+}
+
+bool guard1() {
+int  p;
+if (iState != I_ACTIVE) return false;
+for(p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (pData[p].st == P_REGISTERING) { 
+     		if ( !( pData[p].reg == P_DURABLE &amp;&amp; guard1_1() ) ) return false;
+	}	
+return true;
+}
+
+//2nd TLA rule on page-43 in [1]
+void action1() {
+int p;
+iState = I_COMPLETING;
+tcData.st = TC_PREPARING_VOLATILE;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (tcData.reg[p] == TC_VOLATILE)
+msgDest[p][PREPARE] = true; 
+}
+
+//3rd TLA rule on page-43 in [1]
+bool guard2() {
+if (iState == I_ACTIVE || (tcData.st == TC_PREPARING_VOLATILE || tcData.st == TC_PREPARING_DURABLE)) return true;
+return false;
+}
+
+void action2() {
+int p;
+iState = I_ABORTED;
+tcData.st = TC_ABORTING;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (tcData.reg[p] != TC_UNREGISTERED &amp;&amp; tcData.reg[p] != TC_READ_ONLY)
+msgDest[p][ROLLBACK] = true;
+}
+
+//4th TLA rule on page-43 in [1] 
+bool guard3() {
+int p;
+if  (tcData.st != TC_PREPARING_VOLATILE) return false;
+for(p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+  if (tcData.reg[p] == TC_VOLATILE) return false;	
+return true;
+}
+
+void action3() {
+int p;
+tcData.st = TC_PREPARING_DURABLE;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (tcData.reg[p] == TC_DURABLE)
+msgDest[p][PREPARE] = true;
+}
+
+//5th TLA rule on page-43 in [1]
+bool guard4() {
+int p;
+if (tcData.st != TC_PREPARING_DURABLE) return false;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (tcData.reg[p] == TC_DURABLE) return false;
+return true;
+}
+
+void action4() {
+int p;
+tcData.st = TC_COMMITTING;
+iState = I_COMMITTED;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (tcData.reg[p] == TC_PREPARED)
+msgDest[p][COMMIT] = true;
+}
+
+//1st TLA rule on page-44 in [1]
+bool guard5() {
+int p;
+if (tcData.st == TC_ABORTING) return true;
+if (tcData.st != TC_COMMITTING) return false;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+	if (tcData.reg[p] != TC_UNREGISTERED &amp;&amp; tcData.reg[p] != TC_READ_ONLY &amp;&amp; tcData.reg[p] != TC_COMMITTED) 
+return false;
+
+return true;
+}
+
+void action5() {
+tcData.res = TC_COMMITTED_RES;
+if (tcData.st == TC_ABORTING) tcData.res = TC_ABORTED_RES;
+tcData.st = TC_ENDED;
+}
+
+
+/*********************** m is a "Register" message ********************************************************/
+//2nd TLA rule on page-44 in [1]
+bool guard6(Participant parId, Reg regMsgType) {
+if ((msgSrc[parId][regMsgType] == true) 
+ &amp;&amp; (tcData.st == TC_ACTIVE || (tcData.st == TC_PREPARING_VOLATILE &amp;&amp; regMsgType == REGISTER_DURABLE))) 
+return true;	
+return false;
+}
+
+void action6(Participant parId, Reg regMsgType) {
+msgDest[parId][REGISTER_RESPONSE] = true;
+if (regMsgType == REGISTER_VOLATILE) tcData.reg[parId] = TC_VOLATILE;
+if (regMsgType == REGISTER_DURABLE) tcData.reg[parId] = TC_DURABLE;	
+}
+
+//2nd TLA rule on page-45 in [1]
+bool guard7(Participant parId, Reg regMsgType) {
+if ((msgSrc[parId][regMsgType] == true)
+	&amp;&amp;
+(tcData.st == TC_ABORTING &amp;&amp; 
+((tcData.reg[parId] == TC_UNREGISTERED || tcData.reg[parId] == TC_READ_ONLY) ||
+((tcData.reg[parId] == TC_VOLATILE || tcData.reg[parId] == TC_DURABLE || tcData.reg[parId] == TC_PREPARED) &amp;&amp;
+msgDest[parId][ROLLBACK] == true) ) ) )	return true;
+return false;
+}
+
+void action7(Participant parId, Reg regMsgType) {
+if (tcData.reg[parId] == TC_UNREGISTERED)
+	msgDest[parId][ROLLBACK] = true;
+}
+
+//3rd TLA rule on page-45 in [1]
+bool guard8(Participant parId, Reg regMsgType) {
+if ((msgSrc[parId][regMsgType] == true)
+	&amp;&amp;
+(tcData.st == TC_ENDED &amp;&amp; (tcData.res == TC_ABORTED_RES || pData[parId].st == P_ENDED)))  return true;
+return false;
+}
+
+void action8(Participant parId, Reg regMsgType) {
+msgDest[parId][ROLLBACK] = true;
+}
+
+/*********************** m is a "Prepared" message ********************************/
+//4th TLA rule on page-45 in [1]
+bool guard9(Participant parId) {
+if ((msgSrc[parId][PREPARED] == true)
+	&amp;&amp;
+((tcData.st == TC_PREPARING_VOLATILE &amp;&amp; tcData.reg[parId] == TC_VOLATILE) ||
+		(tcData.st == TC_PREPARING_DURABLE &amp;&amp; tcData.reg[parId] == TC_DURABLE))) return true;
+return false;
+}
+
+void action9(Participant parId) {
+tcData.reg[parId] = TC_PREPARED;
+}
+
+//1st TLA rule on page-46 in [1]
+bool guard10(Participant parId) {
+if (msgSrc[parId][PREPARED] == true &amp;&amp; tcData.st == TC_ENDED) return true;
+return false;
+}
+
+void action10(Participant parId) {
+msgDest[parId][ROLLBACK] = true;
+}
+
+/*********************** m is a "ReadOnly" message **************************************************/
+//3rd TLA rule on page-46 in [1]
+bool guard11(Participant parId) {
+if ((msgSrc[parId][READ_ONLY] == true) 
+	&amp;&amp;
+((tcData.st == TC_PREPARING_VOLATILE &amp;&amp; tcData.reg[parId] == TC_VOLATILE) ||
+		(tcData.st == TC_PREPARING_DURABLE &amp;&amp; tcData.reg[parId] == TC_DURABLE)) ) return true;
+return false;
+}
+
+void action11(Participant parId) {
+tcData.reg[parId] = TC_READ_ONLY;
+}
+
+/*********************** m is an "Aborted" message ***************************************************/
+//1st TLA rule on page-47 in [1]
+bool guard12(Participant parId) {
+if ((msgSrc[parId][ABORTED] == true)
+	&amp;&amp;
+((tcData.st == TC_ACTIVE || tcData.st == TC_PREPARING_VOLATILE || tcData.st == TC_PREPARING_DURABLE) &amp;&amp; 
+		(tcData.reg[parId] == TC_UNREGISTERED || tcData.reg[parId] == TC_VOLATILE || tcData.reg[parId] == TC_DURABLE)))
+return true;
+
+return false;
+}
+
+void action12(Participant parId) {
+int p;
+iState = I_ABORTED;
+tcData.st = TC_ABORTING;
+for (p=0; p&lt;NO_OF_PARTICIPANTS; p++)
+if (msgSrc[parId][ABORTED] == true &amp;&amp; (tcData.reg[parId] != TC_UNREGISTERED &amp;&amp; tcData.reg[parId] != TC_READ_ONLY))
+
+msgDest[parId][ROLLBACK] = true; 
+}
+
+/************************* m is a "Committed" message *******************************************************/
+//1st TLA rule on page-48 in [1]
+bool guard13(Participant parId) {
+if (msgSrc[parId][COMMITTED] == true &amp;&amp; tcData.st == TC_COMMITTING) return true;
+return false;
+}
+
+void action13(Participant parId) {
+tcData.reg[parId] = TC_COMMITTED;
+}</declaration><location id="id0" x="96" y="-832"><name x="32" y="-848">START</name><committed/></location><location id="id1" x="96" y="-1040"><urgent/></location><init ref="id0"/><transition><source ref="id0"/><target ref="id1"/><label kind="assignment" x="104" y="-864">initial()</label></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="-112" y="-976">parId: Participant</label><label kind="guard" x="-112" y="-960">guard13(parId)</label><label kind="assignment" x="-112" y="-944">action13(parId)</label><label kind="comments">p-48, 1st Committed message</label><nail x="32" y="-944"/><nail x="-8" y="-976"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="-32" y="-920">parId: Participant</label><label kind="guard" x="-32" y="-904">guard12(parId)</label><label kind="assignment" x="-32" y="-888">action12(parId)</label><label kind="comments">p-47, 1st Aborted message</label><nail x="40" y="-944"/><nail x="88" y="-928"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="120" y="-920">parId: Participant</label><label kind="guard" x="120" y="-904">guard11(parId)</label><label kind="assignment" x="120" y="-888">action11(parId)</label><label kind="comments">p-46, 1st ReadOnly message</label><nail x="104" y="-928"/><nail x="152" y="-944"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="224" y="-1088">parId: Participant, regMsgType: Reg</label><label kind="guard" x="224" y="-1072">guard8(parId,regMsgType)</label><label kind="assignment" x="208" y="-1112">action7(parId,regMsgType)</label><label kind="comments">P-46, 2nd Prepared message</label><nail x="208" y="-1080"/><nail x="216" y="-1040"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="216" y="-1032">parId: Participant</label><label kind="guard" x="216" y="-1016">guard9(parId)</label><label kind="assignment" x="216" y="-1000">action9(parId)</label><label kind="comments">P-45, 1st Prepared message</label><nail x="216" y="-1032"/><nail x="200" y="-992"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="184" y="-976">parId: Participant</label><label kind="guard" x="184" y="-960">guard10(parId)</label><label kind="assignment" x="184" y="-944">action10(parId)</label><label kind="comments">p-44, 1st Register message</label><nail x="192" y="-984"/><nail x="160" y="-952"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="152" y="-1200">parId: Participant, regMsgType: Reg</label><label kind="guard" x="152" y="-1184">guard6(parId,regMsgType)</label><label kind="assignment" x="152" y="-1168">action6(parId,regMsgType)</label><label kind="comments">p-45, 3rd Register message</label><nail x="128" y="-1160"/><nail x="176" y="-1136"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="select" x="208" y="-1144">parId: Participant, regMsgType: Reg</label><label kind="guard" x="208" y="-1128">guard7(parId,regMsgType)</label><label kind="assignment" x="224" y="-1056">action8(parId,regMsgType)</label><label kind="comments">p-45, 4th Register message</label><nail x="208" y="-1088"/><nail x="184" y="-1128"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="guard" x="72" y="-1200">guard5()</label><label kind="assignment" x="72" y="-1184">action5()</label><label kind="comments">p-44, 5th TLA code module</label><nail x="72" y="-1160"/><nail x="120" y="-1160"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="guard" x="-16" y="-1184">guard4()</label><label kind="assignment" x="-16" y="-1168">action4()</label><label kind="comments">p-43, 4th TLA code module</label><nail x="16" y="-1136"/><nail x="64" y="-1160"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="guard" x="-72" y="-1144">guard3()</label><label kind="assignment" x="-72" y="-1128">action3()</label><label kind="comments">p-43, erd TLA code module</label><nail x="-24" y="-1096"/><nail x="8" y="-1136"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="guard" x="-88" y="-1080">guard2()</label><label kind="assignment" x="-88" y="-1064">action2()</label><label kind="comments">p-43, 2nd TLA code module</label><nail x="-32" y="-1040"/><nail x="-24" y="-1088"/></transition><transition><source ref="id1"/><target ref="id1"/><label kind="guard" x="-88" y="-1024">guard1()</label><label kind="assignment" x="-88" y="-1008">action1()</label><label kind="comments">p-43, 1st TLA code module</label><nail x="-16" y="-984"/><nail x="-32" y="-1032"/></transition></template><template><name>Participant_T</name><parameter>const Participant id</parameter><declaration>// [1] J.E. Johnson, D.E. Langworthy, L.Lamport, F.H. Vogt. "Formal specification of a Web services protocol"
+
+//initial predicate for Participant on page-42 in [1]
+void initial() {
+int p;
+for(p=0; p&lt;NO_OF_PARTICIPANTS; p++) {
+pData[p].st = P_UNREGISTERED;
+pData[p].reg = P_VOLATILE;
+pData[p].res = P_READ_ONLY; }
+}
+
+/** Internal */
+//3rd TLA rule on page-48 in [1]
+bool guard14() {
+if (pData[id].st == P_UNREGISTERED &amp;&amp; iState == I_ACTIVE) return true;
+return false;
+}
+
+void action14() {
+pData[id].st = P_REGISTERING;
+pData[id].reg = P_VOLATILE;
+msgSrc[id][REGISTER_VOLATILE] = true;
+}
+
+//4th TLA rule on page-48 &amp; 49 in [1]
+bool guard15_1() {
+int pp;
+for (pp=0; pp&lt;NO_OF_PARTICIPANTS; pp++)
+	if ((pData[pp].st == P_ACTIVE || pData[pp].st == P_PREPARING) &amp;&amp; pData[pp].reg == P_VOLATILE) return true;
+return false;
+}	
+bool guard15() {
+if (pData[id].st != P_UNREGISTERED) return false;
+if (iState == I_ACTIVE || guard15_1()) return true;
+return false;
+}
+
+void action15() {
+pData[id].st = P_REGISTERING;
+pData[id].reg = P_DURABLE;
+msgSrc[id][REGISTER_DURABLE] = true;
+}
+
+//1st TLA rule on page-49 in [1]
+bool guard16() {
+if (pData[id].st == P_ACTIVE || pData[id].st == P_PREPARING) return true;
+return false;
+}
+
+void action16() {
+pData[id].st = P_ENDED;
+pData[id].res = P_ABORTED;
+msgSrc[id][ABORTED] = true;
+}
+
+//2nd TLA rule on page-49 in [1]
+bool AnyRegistering() {
+int dp;
+for(dp=0; dp&lt;NO_OF_PARTICIPANTS; dp++)
+	if (pData[dp].st == P_REGISTERING &amp;&amp; pData[dp].reg == P_DURABLE) return true;
+return false;
+}
+
+bool AnyActive() {
+int vp;
+for(vp=0; vp&lt;NO_OF_PARTICIPANTS; vp++)
+	if (vp != id &amp;&amp; (pData[vp].st == P_ACTIVE &amp;&amp; pData[vp].reg == P_VOLATILE)) return true;
+return false;
+}
+
+bool guard17() {
+if (pData[id].st != P_PREPARING) return false;
+	if (pData[id].reg == P_DURABLE || !(AnyRegistering()) || AnyActive()) return true;
+return false;
+}
+
+void action17_1() {
+pData[id].st = P_PREPARED;
+msgSrc[id][PREPARED] = true;	
+}
+
+void action17_2() {
+pData[id].st = P_ENDED;
+pData[id].res = P_READ_ONLY;
+msgSrc[id][READ_ONLY] = true; 
+}
+
+/***************************** m is a "RegisterResponse message "************************************/
+//1st TLA rule on page-50 in [1]
+bool guard18() {
+if (msgDest[id][REGISTER_RESPONSE] == true &amp;&amp; pData[id].st == P_REGISTERING) return true;
+return false;
+}
+
+void action18() {
+pData[id].st = P_ACTIVE;
+}
+
+/************************* m is a "Prepare message" ********************************************/
+//3rd TLA rule on page-50 in [1]
+bool guard19() {
+if ((msgDest[id][PREPARE] == true) 
+	&amp;&amp;
+(pData[id].st == P_REGISTERING || pData[id].st == P_ACTIVE)) return true;	
+return false;
+}
+
+void action19() {
+pData[id].st = P_PREPARING;
+}
+
+//5th TLA rule on page-50 in [1]
+bool guard20() {
+if ((msgDest[id][PREPARE] == true) 
+	&amp;&amp;
+(pData[id].st == P_ENDED &amp;&amp;
+			((pData[id].res == P_COMMITTED &amp;&amp; msgSrc[id][COMMITTED] == true) ||
+			(pData[id].res == P_ABORTED &amp;&amp; 
+			(msgSrc[id][ABORTED] == true || (tcData.st == TC_ENDED &amp;&amp; tcData.res == TC_COMMITTED_RES))) ||
+			(pData[id].res == P_READ_ONLY &amp;&amp; msgSrc[id][READ_ONLY] == true)))) return true;
+return false;
+}
+
+void action20() {
+msgSrc[id][ABORTED] = true;
+}
+
+/***************** m is a "Commit" message ***********************************************/
+//6th TLA rule on page-50 in [1]
+bool guard21() {
+if ((msgDest[id][COMMIT] == true) 
+	&amp;&amp;
+(pData[id].st == P_PREPARED))
+{
+return true;	}
+
+return false;
+}
+
+void action21() {
+pData[id].st = P_ENDED;
+pData[id].res = P_COMMITTED;
+msgSrc[id][COMMITTED] = true;
+}
+
+/************************ m is a "Rollback" message*******************************************/
+//2nd TLA rule on page-51 in [1]
+bool guard22() {
+if ((msgDest[id][ROLLBACK] == true) 
+	&amp;&amp;
+(pData[id].st == P_REGISTERING || pData[id].st == P_ACTIVE ||
+		pData[id].st == P_PREPARING || pData[id].st == P_PREPARED)) return true;
+return false;
+}
+
+void action22() {
+pData[id].st = P_ENDED;
+pData[id].res = P_ABORTED;
+msgSrc[id][ABORTED] = true;
+}</declaration><location id="id2" x="-680" y="-440"><name x="-736" y="-464">START</name><committed/></location><location id="id3" x="-680" y="-608"><urgent/></location><init ref="id2"/><transition><source ref="id2"/><target ref="id3"/><label kind="assignment" x="-672" y="-472">initial()</label></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-784" y="-760">guard17()</label><label kind="assignment" x="-784" y="-744">action17_2()</label><nail x="-752" y="-704"/><nail x="-696" y="-728"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-656" y="-512">guard22()</label><label kind="assignment" x="-656" y="-496">action22()</label><label kind="comments">p-51, 1st Rollback message</label><nail x="-672" y="-504"/><nail x="-616" y="-520"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-584" y="-560">guard21()</label><label kind="assignment" x="-584" y="-544">action21()</label><label kind="comments">p-50, 1st Commit message</label><nail x="-608" y="-528"/><nail x="-576" y="-576"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-568" y="-632">guard20()</label><label kind="assignment" x="-568" y="-616">action20()</label><label kind="comments">p-50, 3rd Prepare message</label><nail x="-576" y="-640"/><nail x="-576" y="-584"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-592" y="-712">guard19()</label><label kind="assignment" x="-592" y="-696">action19()</label><label kind="comments">p-50, 1st Prepare message</label><nail x="-576" y="-656"/><nail x="-616" y="-704"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-664" y="-760">guard18()</label><label kind="assignment" x="-664" y="-744">action18()</label><label kind="comments">p-49, 1st RegisterResponse message</label><nail x="-624" y="-712"/><nail x="-680" y="-728"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-848" y="-560">guard15()</label><label kind="assignment" x="-848" y="-544">action15()</label><label kind="comments">p-48, 2nd TLA code module</label><nail x="-760" y="-528"/><nail x="-792" y="-568"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-864" y="-704">guard17()</label><label kind="assignment" x="-872" y="-688">action17_1()</label><label kind="comments">p-49, 4th TLA code module</label><nail x="-800" y="-648"/><nail x="-768" y="-696"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-872" y="-624">guard16()</label><label kind="assignment" x="-872" y="-608">action16()</label><label kind="comments">p-49, 3rd TLA code module</label><nail x="-800" y="-584"/><nail x="-800" y="-632"/></transition><transition><source ref="id3"/><target ref="id3"/><label kind="guard" x="-784" y="-512">guard14()</label><label kind="assignment" x="-784" y="-496">action14()</label><label kind="comments">p-48, 1st TLA code module</label><nail x="-696" y="-504"/><nail x="-752" y="-520"/></transition></template><system>system InitCoor, Participant_T;</system></nta>

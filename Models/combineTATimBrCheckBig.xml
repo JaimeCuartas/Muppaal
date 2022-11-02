@@ -1,0 +1,2118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+broadcast chan syncTime, new, old, raise, lower, up, down;
+clock yr;
+clock t;
+	
+// Place global declarations here.
+clock clock_c3;
+broadcast chan hello, _empty_slave, _data0, _data1, _data2, _data3, _to_medium_slave, _from_medium_slave, _in_2, _out_2;
+	
+// Place global declarations here.
+
+clock GCTimer;
+broadcast chan _ClutchIsClosed, _CloseClutch, _GearSet, _ReqSet, _ReqNewGear, RqZeroTorque, _OpenClutch, _TorqueZero, _NewGear, _ClutchIsOpen, _ReqNeu, _GearNeu, _SpeedSet, _ReqSpeed, _drive, _sport, _ReqTorque, _void;
+
+
+broadcast chan exchange;</declaration>
+	<template>
+		<name x="5" y="5">CA1</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="76" y="399">
+			<name x="100" y="399">s2_3</name>
+			<label kind="exponentialrate" x="66" y="433">1</label>
+		</location>
+		<location id="id1" x="-244" y="399">
+			<name x="-228" y="367">s2_4</name>
+			<label kind="exponentialrate" x="-254" y="433">1</label>
+		</location>
+		<location id="id2" x="396" y="-17">
+			<name x="412" y="-9">s2_2</name>
+			<label kind="exponentialrate" x="386" y="17">1</label>
+		</location>
+		<location id="id3" x="-244" y="-17">
+			<name x="-254" y="-47">s2_5</name>
+			<label kind="exponentialrate" x="-254" y="17">1</label>
+		</location>
+		<location id="id4" x="76" y="271">
+			<name x="84" y="279">s2_1</name>
+			<label kind="exponentialrate" x="66" y="305">1</label>
+		</location>
+		<location id="id5" x="76" y="-17">
+			<name x="66" y="-47">s2_0</name>
+			<label kind="exponentialrate" x="66" y="17">1</label>
+		</location>
+		<location id="id6" x="1103" y="624">
+			<name x="1093" y="594">CheckClutchClosed2</name>
+			<label kind="invariant" x="1093" y="639">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1093" y="658">1</label>
+		</location>
+		<location id="id7" x="1135" y="528">
+			<name x="1079" y="480">CheckClutchClosed</name>
+			<label kind="invariant" x="1087" y="496">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1125" y="562">1</label>
+		</location>
+		<location id="id8" x="1327" y="528">
+			<name x="1295" y="544">ClutchClose</name>
+			<label kind="exponentialrate" x="1317" y="562">1</label>
+		</location>
+		<location id="id9" x="1327" y="336">
+			<name x="1343" y="320">CheckGearSet2</name>
+			<label kind="invariant" x="1343" y="336">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="1317" y="370">1</label>
+		</location>
+		<location id="id10" x="1199" y="336">
+			<name x="1127" y="352">ClutchOpen</name>
+			<label kind="exponentialrate" x="1189" y="370">1</label>
+		</location>
+		<location id="id11" x="1199" y="176">
+			<name x="1191" y="136">CheckClutch</name>
+			<label kind="invariant" x="1183" y="152">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1189" y="210">1</label>
+		</location>
+		<location id="id12" x="1327" y="176">
+			<name x="1351" y="168">ReqSetGear2</name>
+			<label kind="exponentialrate" x="1317" y="210">1</label>
+		</location>
+		<location id="id13" x="1327" y="80">
+			<name x="1343" y="64">GearCheckNeu2</name>
+			<label kind="invariant" x="1343" y="80">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="1317" y="114">1</label>
+		</location>
+		<location id="id14" x="1327" y="-16">
+			<name x="1343" y="-48">ClutchOpen2</name>
+			<label kind="exponentialrate" x="1317" y="18">1</label>
+		</location>
+		<location id="id15" x="1103" y="-16">
+			<name x="1093" y="-46">CheckClutch2</name>
+			<label kind="invariant" x="1093" y="-1">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1093" y="18">1</label>
+		</location>
+		<location id="id16" x="1039" y="432">
+			<name x="1063" y="416">ReqSetGear11</name>
+			<label kind="exponentialrate" x="1029" y="466">1</label>
+		</location>
+		<location id="id17" x="847" y="432">
+			<name x="719" y="416">CheckGearSet1</name>
+			<label kind="invariant" x="719" y="432">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="837" y="466">1</label>
+		</location>
+		<location id="id18" x="847" y="528">
+			<name x="855" y="496">ReqTorqueC</name>
+			<label kind="exponentialrate" x="837" y="562">1</label>
+		</location>
+		<location id="id19" x="847" y="624">
+			<name x="799" y="640">GearChanged</name>
+			<label kind="exponentialrate" x="837" y="658">1</label>
+		</location>
+		<location id="id20" x="847" y="336">
+			<name x="735" y="312">ReqSetGear12</name>
+			<label kind="exponentialrate" x="837" y="370">1</label>
+		</location>
+		<location id="id21" x="975" y="272">
+			<name x="1007" y="256">ReqSetGear</name>
+			<label kind="exponentialrate" x="965" y="306">1</label>
+		</location>
+		<location id="id22" x="975" y="176">
+			<name x="919" y="136">CheckSyncSpeed</name>
+			<label kind="invariant" x="927" y="152">GCTimer&lt;=155</label>
+			<label kind="exponentialrate" x="965" y="210">1</label>
+		</location>
+		<location id="id23" x="1071" y="112">
+			<name x="1087" y="80">CheckGearNeu</name>
+			<label kind="invariant" x="1087" y="112">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="1061" y="146">1</label>
+		</location>
+		<location id="id24" x="911" y="112">
+			<name x="807" y="104">ReqNeuGear</name>
+			<label kind="exponentialrate" x="901" y="146">1</label>
+		</location>
+		<location id="id25" x="911" y="-16">
+			<name x="863" y="-88">CheckTorque</name>
+			<label kind="invariant" x="855" y="-64">GCTimer&lt;=255</label>
+			<label kind="exponentialrate" x="901" y="18">1</label>
+		</location>
+		<location id="id26" x="719" y="176">
+			<name x="671" y="144">ReqSyncSpeed</name>
+			<label kind="exponentialrate" x="709" y="210">1</label>
+		</location>
+		<location id="id27" x="719" y="-16">
+			<name x="743" y="-40">Initiate</name>
+			<label kind="exponentialrate" x="709" y="18">1</label>
+		</location>
+		<location id="id28" x="-943" y="261">
+			<name x="-983" y="253">H1</name>
+			<label kind="exponentialrate" x="-953" y="295">1</label>
+		</location>
+		<location id="id29" x="-783" y="261">
+			<name x="-759" y="245">H2</name>
+			<label kind="exponentialrate" x="-793" y="295">1</label>
+		</location>
+		<location id="id30" x="-815" y="485">
+			<name x="-855" y="477">G2</name>
+			<label kind="exponentialrate" x="-825" y="519">1</label>
+		</location>
+		<location id="id31" x="-591" y="485">
+			<name x="-567" y="469">G1</name>
+			<label kind="exponentialrate" x="-601" y="519">1</label>
+		</location>
+		<location id="id32" x="-687" y="357">
+			<name x="-697" y="327">G3</name>
+			<label kind="exponentialrate" x="-697" y="391">1</label>
+		</location>
+		<location id="id33" x="-815" y="357">
+			<name x="-847" y="349">H</name>
+			<label kind="exponentialrate" x="-825" y="391">1</label>
+		</location>
+		<location id="id34" x="-399" y="357">
+			<name x="-409" y="327">F1</name>
+			<label kind="exponentialrate" x="-403" y="375">1</label>
+		</location>
+		<location id="id35" x="-590" y="358">
+			<name x="-600" y="328">G</name>
+			<label kind="exponentialrate" x="-600" y="392">1</label>
+		</location>
+		<location id="id36" x="-591" y="229">
+			<name x="-601" y="199">F2</name>
+			<label kind="exponentialrate" x="-601" y="263">1</label>
+		</location>
+		<location id="id37" x="-703" y="133">
+			<name x="-713" y="103">E3</name>
+			<label kind="exponentialrate" x="-713" y="167">1</label>
+		</location>
+		<location id="id38" x="-598" y="129">
+			<name x="-608" y="99">F</name>
+			<label kind="exponentialrate" x="-608" y="163">1</label>
+		</location>
+		<location id="id39" x="-598" y="-24">
+			<name x="-608" y="-54">E2</name>
+			<label kind="exponentialrate" x="-608" y="10">1</label>
+		</location>
+		<location id="id40" x="-815" y="-27">
+			<name x="-825" y="-57">E1</name>
+			<label kind="exponentialrate" x="-825" y="7">1</label>
+		</location>
+		<location id="id41" x="2563" y="399">
+			<name x="2587" y="399">s2_3_</name>
+			<label kind="exponentialrate" x="2553" y="433">1</label>
+		</location>
+		<location id="id42" x="2243" y="399">
+			<name x="2259" y="367">s2_4_</name>
+			<label kind="exponentialrate" x="2233" y="433">1</label>
+		</location>
+		<location id="id43" x="2883" y="-17">
+			<name x="2899" y="-9">s2_2_</name>
+			<label kind="exponentialrate" x="2873" y="17">1</label>
+		</location>
+		<location id="id44" x="2243" y="-17">
+			<name x="2233" y="-47">s2_5_</name>
+			<label kind="exponentialrate" x="2233" y="17">1</label>
+		</location>
+		<location id="id45" x="2563" y="271">
+			<name x="2571" y="279">s2_1_</name>
+			<label kind="exponentialrate" x="2553" y="305">1</label>
+		</location>
+		<location id="id46" x="2563" y="-17">
+			<name x="2553" y="-47">s2_0_</name>
+			<label kind="exponentialrate" x="2553" y="17">1</label>
+		</location>
+		<location id="id47" x="3590" y="624">
+			<name x="3580" y="594">CheckClutchClosed2_</name>
+			<label kind="invariant" x="3580" y="639">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3580" y="658">1</label>
+		</location>
+		<location id="id48" x="3622" y="528">
+			<name x="3566" y="480">CheckClutchClosed_</name>
+			<label kind="invariant" x="3574" y="496">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3612" y="562">1</label>
+		</location>
+		<location id="id49" x="3814" y="528">
+			<name x="3782" y="544">ClutchClose_</name>
+			<label kind="exponentialrate" x="3804" y="562">1</label>
+		</location>
+		<location id="id50" x="3814" y="336">
+			<name x="3830" y="320">CheckGearSet2_</name>
+			<label kind="invariant" x="3830" y="336">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="3804" y="370">1</label>
+		</location>
+		<location id="id51" x="3686" y="336">
+			<name x="3614" y="352">ClutchOpen_</name>
+			<label kind="exponentialrate" x="3676" y="370">1</label>
+		</location>
+		<location id="id52" x="3686" y="176">
+			<name x="3678" y="136">CheckClutch_</name>
+			<label kind="invariant" x="3670" y="152">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3676" y="210">1</label>
+		</location>
+		<location id="id53" x="3814" y="176">
+			<name x="3838" y="168">ReqSetGear2_</name>
+			<label kind="exponentialrate" x="3804" y="210">1</label>
+		</location>
+		<location id="id54" x="3814" y="80">
+			<name x="3830" y="64">GearCheckNeu2_</name>
+			<label kind="invariant" x="3830" y="80">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="3804" y="114">1</label>
+		</location>
+		<location id="id55" x="3814" y="-16">
+			<name x="3830" y="-48">ClutchOpen2_</name>
+			<label kind="exponentialrate" x="3804" y="18">1</label>
+		</location>
+		<location id="id56" x="3590" y="-16">
+			<name x="3580" y="-46">CheckClutch2_</name>
+			<label kind="invariant" x="3580" y="-1">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3580" y="18">1</label>
+		</location>
+		<location id="id57" x="3526" y="432">
+			<name x="3550" y="416">ReqSetGear11_</name>
+			<label kind="exponentialrate" x="3516" y="466">1</label>
+		</location>
+		<location id="id58" x="3334" y="432">
+			<name x="3206" y="416">CheckGearSet1_</name>
+			<label kind="invariant" x="3206" y="432">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="3324" y="466">1</label>
+		</location>
+		<location id="id59" x="3334" y="528">
+			<name x="3342" y="496">ReqTorqueC_</name>
+			<label kind="exponentialrate" x="3324" y="562">1</label>
+		</location>
+		<location id="id60" x="3334" y="624">
+			<name x="3286" y="640">GearChanged_</name>
+			<label kind="exponentialrate" x="3324" y="658">1</label>
+		</location>
+		<location id="id61" x="3334" y="336">
+			<name x="3222" y="312">ReqSetGear12_</name>
+			<label kind="exponentialrate" x="3324" y="370">1</label>
+		</location>
+		<location id="id62" x="3462" y="272">
+			<name x="3494" y="256">ReqSetGear_</name>
+			<label kind="exponentialrate" x="3452" y="306">1</label>
+		</location>
+		<location id="id63" x="3462" y="176">
+			<name x="3406" y="136">CheckSyncSpeed_</name>
+			<label kind="invariant" x="3414" y="152">GCTimer&lt;=155</label>
+			<label kind="exponentialrate" x="3452" y="210">1</label>
+		</location>
+		<location id="id64" x="3558" y="112">
+			<name x="3574" y="80">CheckGearNeu_</name>
+			<label kind="invariant" x="3574" y="112">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="3548" y="146">1</label>
+		</location>
+		<location id="id65" x="3398" y="112">
+			<name x="3294" y="104">ReqNeuGear_</name>
+			<label kind="exponentialrate" x="3388" y="146">1</label>
+		</location>
+		<location id="id66" x="3398" y="-16">
+			<name x="3350" y="-88">CheckTorque_</name>
+			<label kind="invariant" x="3342" y="-64">GCTimer&lt;=255</label>
+			<label kind="exponentialrate" x="3388" y="18">1</label>
+		</location>
+		<location id="id67" x="3206" y="176">
+			<name x="3158" y="144">ReqSyncSpeed_</name>
+			<label kind="exponentialrate" x="3196" y="210">1</label>
+		</location>
+		<location id="id68" x="3206" y="-16">
+			<name x="3230" y="-40">Initiate_</name>
+			<label kind="exponentialrate" x="3196" y="18">1</label>
+		</location>
+		<location id="id69" x="1544" y="261">
+			<name x="1504" y="253">H1_</name>
+			<label kind="exponentialrate" x="1534" y="295">1</label>
+		</location>
+		<location id="id70" x="1704" y="261">
+			<name x="1728" y="245">H2_</name>
+			<label kind="exponentialrate" x="1694" y="295">1</label>
+		</location>
+		<location id="id71" x="1672" y="485">
+			<name x="1632" y="477">G2_</name>
+			<label kind="exponentialrate" x="1662" y="519">1</label>
+		</location>
+		<location id="id72" x="1896" y="485">
+			<name x="1920" y="469">G1_</name>
+			<label kind="exponentialrate" x="1886" y="519">1</label>
+		</location>
+		<location id="id73" x="1800" y="357">
+			<name x="1790" y="327">G3_</name>
+			<label kind="exponentialrate" x="1790" y="391">1</label>
+		</location>
+		<location id="id74" x="1672" y="357">
+			<name x="1640" y="349">H_</name>
+			<label kind="exponentialrate" x="1662" y="391">1</label>
+		</location>
+		<location id="id75" x="2088" y="357">
+			<name x="2078" y="327">F1_</name>
+			<label kind="exponentialrate" x="2084" y="375">1</label>
+		</location>
+		<location id="id76" x="1897" y="358">
+			<name x="1887" y="328">G_</name>
+			<label kind="exponentialrate" x="1887" y="392">1</label>
+		</location>
+		<location id="id77" x="1896" y="229">
+			<name x="1886" y="199">F2_</name>
+			<label kind="exponentialrate" x="1886" y="263">1</label>
+		</location>
+		<location id="id78" x="1784" y="133">
+			<name x="1774" y="103">E3_</name>
+			<label kind="exponentialrate" x="1774" y="167">1</label>
+		</location>
+		<location id="id79" x="1889" y="129">
+			<name x="1879" y="99">F_</name>
+			<label kind="exponentialrate" x="1879" y="163">1</label>
+		</location>
+		<location id="id80" x="1889" y="-24">
+			<name x="1879" y="-54">E2_</name>
+			<label kind="exponentialrate" x="1879" y="10">1</label>
+		</location>
+		<location id="id81" x="1672" y="-27">
+			<name x="1662" y="-57">E1_</name>
+			<label kind="exponentialrate" x="1662" y="7">1</label>
+		</location>
+		<init ref="id5"/>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="1283" y="-255">exchange!</label>
+			<nail x="2218" y="-229"/>
+			<nail x="374" y="-229"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="1283" y="-374">exchange!</label>
+			<nail x="374" y="-340"/>
+			<nail x="2210" y="-340"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id37"/>
+			<label kind="synchronisation" x="-212" y="-102">old?</label>
+			<nail x="0" y="-76"/>
+			<nail x="-416" y="-76"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id40"/>
+			<label kind="synchronisation" x="-374" y="-153">new?</label>
+			<label kind="assignment" x="-374" y="-136">yr=0</label>
+			<nail x="0" y="-110"/>
+			<nail x="-705" y="-110"/>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-501" y="68">yr&gt;10 , yr&lt;30</label>
+			<label kind="synchronisation" x="-501" y="85">up!</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-501" y="110">yr&gt;20 , yr&lt;40</label>
+			<label kind="synchronisation" x="-459" y="127">up!</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="450" y="450">_NewGear!</label>
+			<nail x="518" y="578"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id27"/>
+			<label kind="synchronisation" x="501" y="-42">_ReqNewGear?</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-324" y="511">_from_medium_slave?</label>
+			<nail x="-180" y="495"/>
+			<nail x="-308" y="495"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-140" y="-41">_empty_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-356" y="151">clock_c3==2</label>
+			<label kind="synchronisation" x="-380" y="167">_to_medium_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-60" y="407">_in_2?</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id0"/>
+			<label kind="guard" x="79" y="312">clock_c3==0</label>
+			<label kind="synchronisation" x="79" y="329">_from_medium_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="324" y="-161">_from_medium_slave?</label>
+			<nail x="332" y="-113"/>
+			<nail x="460" y="-113"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id5"/>
+			<label kind="guard" x="198" y="-53">clock_c3==2</label>
+			<label kind="synchronisation" x="164" y="-36">_from_medium_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id2"/>
+			<label kind="guard" x="396" y="135">clock_c3==0</label>
+			<label kind="synchronisation" x="420" y="159">_out_2!</label>
+			<nail x="396" y="271"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="280" y="171">_data1?</label>
+			<nail x="368" y="83"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-153" y="195">_data2?</label>
+			<nail x="-201" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="214" y="90">_data3?</label>
+			<nail x="215" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-138" y="100">_data0?</label>
+			<nail x="-82" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-57" y="91">_from_medium_slave?</label>
+			<nail x="71" y="117"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="919" y="624">_ClutchIsClosed?</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="1415" y="416">_CloseClutch!</label>
+			<label kind="assignment" x="1423" y="440">GCTimer=0</label>
+			<nail x="1487" y="240"/>
+			<nail x="1487" y="624"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="935" y="536">_ClutchIsClosed?</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="1183" y="512">_CloseClutch!</label>
+			<label kind="assignment" x="1191" y="528">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="1267" y="417">_GearSet?</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="1231" y="312">_ReqSet!</label>
+			<label kind="assignment" x="1215" y="336">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="1327" y="239">_void!</label>
+			<label kind="assignment" x="1287" y="248">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="1139" y="241">_ClutchIsOpen?</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id11"/>
+			<label kind="guard" x="1063" y="144">GCTimer&gt;=150</label>
+			<label kind="synchronisation" x="1055" y="160">_OpenClutch!</label>
+			<label kind="assignment" x="1063" y="176">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="1335" y="120">_GearNeu?</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="1343" y="16">_ReqNeu!</label>
+			<label kind="assignment" x="1335" y="32">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="1199" y="-40">_ClutchIsOpen?</label>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id15"/>
+			<label kind="guard" x="975" y="-48">GCTimer&gt;=250</label>
+			<label kind="synchronisation" x="983" y="-32">_OpenClutch!</label>
+			<label kind="assignment" x="983" y="-8">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="911" y="408">_ReqSet!</label>
+			<label kind="assignment" x="903" y="432">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="991" y="352">_sport?</label>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="787" y="561">_ReqTorque!</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="787" y="465">_GearSet?</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="783" y="352">_ReqSet!</label>
+			<label kind="assignment" x="767" y="368">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id20"/>
+			<label kind="synchronisation" x="851" y="289">_drive?</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="991" y="216">_SpeedSet?</label>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id22"/>
+			<label kind="synchronisation" x="799" y="184">_ReqSpeed!</label>
+			<label kind="assignment" x="799" y="200">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id26"/>
+			<label kind="synchronisation" x="807" y="136">_GearNeu?</label>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id23"/>
+			<label kind="synchronisation" x="951" y="64">_ReqNeu!</label>
+			<label kind="assignment" x="943" y="88">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="807" y="48">_TorqueZero?</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="755" y="-31">RqZeroTorque!</label>
+			<label kind="assignment" x="755" y="-16">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id26"/>
+			<label kind="synchronisation" x="719" y="63">_void!</label>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-919" y="309">new?</label>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="-791" y="301">old?</label>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id33"/>
+			<label kind="synchronisation" x="-759" y="341">raise?</label>
+			<label kind="assignment" x="-759" y="356">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-655" y="341">old?</label>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id33"/>
+			<label kind="synchronisation" x="-875" y="406">raise?</label>
+			<label kind="assignment" x="-875" y="421">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id30"/>
+			<label kind="synchronisation" x="-743" y="469">syncTime?</label>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id31"/>
+			<label kind="synchronisation" x="-651" y="406">new?</label>
+			<label kind="assignment" x="-651" y="421">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id34"/>
+			<label kind="synchronisation" x="-487" y="229">new?</label>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-555" y="327">yr&gt;20 , yr&lt;40</label>
+			<label kind="synchronisation" x="-555" y="342">down!</label>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-651" y="263">yr &gt; 20 , yr &lt; 40</label>
+			<label kind="synchronisation" x="-651" y="278">down!</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="-623" y="173">old?</label>
+		</transition>
+		<transition>
+			<source ref="id37"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="-671" y="117">lower?</label>
+			<label kind="assignment" x="-663" y="133">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="-651" y="38">lower?</label>
+			<label kind="assignment" x="-651" y="53">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id39"/>
+			<label kind="synchronisation" x="-763" y="-42">syncTime?</label>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id78"/>
+			<label kind="synchronisation" x="2275" y="-102">old?</label>
+			<nail x="2487" y="-76"/>
+			<nail x="2071" y="-76"/>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id81"/>
+			<label kind="synchronisation" x="2113" y="-153">new?</label>
+			<label kind="assignment" x="2113" y="-136">yr=0</label>
+			<nail x="2487" y="-110"/>
+			<nail x="1782" y="-110"/>
+		</transition>
+		<transition>
+			<source ref="id69"/>
+			<target ref="id46"/>
+			<label kind="guard" x="1986" y="68">yr&gt;10 , yr&lt;30</label>
+			<label kind="synchronisation" x="1986" y="85">up!</label>
+		</transition>
+		<transition>
+			<source ref="id70"/>
+			<target ref="id46"/>
+			<label kind="guard" x="1986" y="110">yr&gt;20 , yr&lt;40</label>
+			<label kind="synchronisation" x="2028" y="127">up!</label>
+		</transition>
+		<transition>
+			<source ref="id60"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="2937" y="450">_NewGear!</label>
+			<nail x="3005" y="578"/>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id68"/>
+			<label kind="synchronisation" x="2988" y="-42">_ReqNewGear?</label>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id42"/>
+			<label kind="synchronisation" x="2163" y="511">_from_medium_slave?</label>
+			<nail x="2307" y="495"/>
+			<nail x="2179" y="495"/>
+		</transition>
+		<transition>
+			<source ref="id44"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="2347" y="-41">_empty_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id44"/>
+			<label kind="guard" x="2131" y="151">clock_c3==2</label>
+			<label kind="synchronisation" x="2107" y="167">_to_medium_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id41"/>
+			<target ref="id42"/>
+			<label kind="synchronisation" x="2427" y="407">_in_2?</label>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id41"/>
+			<label kind="guard" x="2566" y="312">clock_c3==0</label>
+			<label kind="synchronisation" x="2566" y="329">_from_medium_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="2811" y="-161">_from_medium_slave?</label>
+			<nail x="2819" y="-113"/>
+			<nail x="2947" y="-113"/>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id46"/>
+			<label kind="guard" x="2685" y="-53">clock_c3==2</label>
+			<label kind="synchronisation" x="2651" y="-36">_from_medium_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id43"/>
+			<label kind="guard" x="2883" y="135">clock_c3==0</label>
+			<label kind="synchronisation" x="2907" y="159">_out_2!</label>
+			<nail x="2883" y="271"/>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="2767" y="171">_data1?</label>
+			<nail x="2855" y="83"/>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="2334" y="195">_data2?</label>
+			<nail x="2286" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="2701" y="90">_data3?</label>
+			<nail x="2702" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="2349" y="100">_data0?</label>
+			<nail x="2405" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id45"/>
+			<label kind="synchronisation" x="2430" y="91">_from_medium_slave?</label>
+			<nail x="2558" y="117"/>
+		</transition>
+		<transition>
+			<source ref="id47"/>
+			<target ref="id60"/>
+			<label kind="synchronisation" x="3406" y="624">_ClutchIsClosed?</label>
+		</transition>
+		<transition>
+			<source ref="id53"/>
+			<target ref="id47"/>
+			<label kind="synchronisation" x="3902" y="416">_CloseClutch!</label>
+			<label kind="assignment" x="3910" y="440">GCTimer=0</label>
+			<nail x="3974" y="240"/>
+			<nail x="3974" y="624"/>
+		</transition>
+		<transition>
+			<source ref="id48"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="3422" y="536">_ClutchIsClosed?</label>
+		</transition>
+		<transition>
+			<source ref="id49"/>
+			<target ref="id48"/>
+			<label kind="synchronisation" x="3670" y="512">_CloseClutch!</label>
+			<label kind="assignment" x="3678" y="528">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id50"/>
+			<target ref="id49"/>
+			<label kind="synchronisation" x="3754" y="417">_GearSet?</label>
+		</transition>
+		<transition>
+			<source ref="id51"/>
+			<target ref="id50"/>
+			<label kind="synchronisation" x="3718" y="312">_ReqSet!</label>
+			<label kind="assignment" x="3702" y="336">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id53"/>
+			<target ref="id50"/>
+			<label kind="synchronisation" x="3814" y="239">_void!</label>
+			<label kind="assignment" x="3774" y="248">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id52"/>
+			<target ref="id51"/>
+			<label kind="synchronisation" x="3626" y="241">_ClutchIsOpen?</label>
+		</transition>
+		<transition>
+			<source ref="id63"/>
+			<target ref="id52"/>
+			<label kind="guard" x="3550" y="144">GCTimer&gt;=150</label>
+			<label kind="synchronisation" x="3542" y="160">_OpenClutch!</label>
+			<label kind="assignment" x="3550" y="176">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id54"/>
+			<target ref="id53"/>
+			<label kind="synchronisation" x="3822" y="120">_GearNeu?</label>
+		</transition>
+		<transition>
+			<source ref="id55"/>
+			<target ref="id54"/>
+			<label kind="synchronisation" x="3830" y="16">_ReqNeu!</label>
+			<label kind="assignment" x="3822" y="32">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id56"/>
+			<target ref="id55"/>
+			<label kind="synchronisation" x="3686" y="-40">_ClutchIsOpen?</label>
+		</transition>
+		<transition>
+			<source ref="id66"/>
+			<target ref="id56"/>
+			<label kind="guard" x="3462" y="-48">GCTimer&gt;=250</label>
+			<label kind="synchronisation" x="3470" y="-32">_OpenClutch!</label>
+			<label kind="assignment" x="3470" y="-8">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id58"/>
+			<label kind="synchronisation" x="3398" y="408">_ReqSet!</label>
+			<label kind="assignment" x="3390" y="432">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id57"/>
+			<label kind="synchronisation" x="3478" y="352">_sport?</label>
+		</transition>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id60"/>
+			<label kind="synchronisation" x="3274" y="561">_ReqTorque!</label>
+		</transition>
+		<transition>
+			<source ref="id58"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="3274" y="465">_GearSet?</label>
+		</transition>
+		<transition>
+			<source ref="id61"/>
+			<target ref="id58"/>
+			<label kind="synchronisation" x="3270" y="352">_ReqSet!</label>
+			<label kind="assignment" x="3254" y="368">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id61"/>
+			<label kind="synchronisation" x="3338" y="289">_drive?</label>
+		</transition>
+		<transition>
+			<source ref="id63"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="3478" y="216">_SpeedSet?</label>
+		</transition>
+		<transition>
+			<source ref="id67"/>
+			<target ref="id63"/>
+			<label kind="synchronisation" x="3286" y="184">_ReqSpeed!</label>
+			<label kind="assignment" x="3286" y="200">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id64"/>
+			<target ref="id67"/>
+			<label kind="synchronisation" x="3294" y="136">_GearNeu?</label>
+		</transition>
+		<transition>
+			<source ref="id65"/>
+			<target ref="id64"/>
+			<label kind="synchronisation" x="3438" y="64">_ReqNeu!</label>
+			<label kind="assignment" x="3430" y="88">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id66"/>
+			<target ref="id65"/>
+			<label kind="synchronisation" x="3294" y="48">_TorqueZero?</label>
+		</transition>
+		<transition>
+			<source ref="id68"/>
+			<target ref="id66"/>
+			<label kind="synchronisation" x="3242" y="-31">RqZeroTorque!</label>
+			<label kind="assignment" x="3242" y="-16">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id68"/>
+			<target ref="id67"/>
+			<label kind="synchronisation" x="3206" y="63">_void!</label>
+		</transition>
+		<transition>
+			<source ref="id74"/>
+			<target ref="id69"/>
+			<label kind="synchronisation" x="1568" y="309">new?</label>
+		</transition>
+		<transition>
+			<source ref="id74"/>
+			<target ref="id70"/>
+			<label kind="synchronisation" x="1696" y="301">old?</label>
+		</transition>
+		<transition>
+			<source ref="id73"/>
+			<target ref="id74"/>
+			<label kind="synchronisation" x="1728" y="341">raise?</label>
+			<label kind="assignment" x="1728" y="356">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id76"/>
+			<target ref="id73"/>
+			<label kind="synchronisation" x="1832" y="341">old?</label>
+		</transition>
+		<transition>
+			<source ref="id71"/>
+			<target ref="id74"/>
+			<label kind="synchronisation" x="1612" y="406">raise?</label>
+			<label kind="assignment" x="1612" y="421">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id72"/>
+			<target ref="id71"/>
+			<label kind="synchronisation" x="1744" y="469">syncTime?</label>
+		</transition>
+		<transition>
+			<source ref="id76"/>
+			<target ref="id72"/>
+			<label kind="synchronisation" x="1836" y="406">new?</label>
+			<label kind="assignment" x="1836" y="421">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id79"/>
+			<target ref="id75"/>
+			<label kind="synchronisation" x="2000" y="229">new?</label>
+		</transition>
+		<transition>
+			<source ref="id75"/>
+			<target ref="id76"/>
+			<label kind="guard" x="1932" y="327">yr&gt;20 , yr&lt;40</label>
+			<label kind="synchronisation" x="1932" y="342">down!</label>
+		</transition>
+		<transition>
+			<source ref="id77"/>
+			<target ref="id76"/>
+			<label kind="guard" x="1836" y="263">yr &gt; 20 , yr &lt; 40</label>
+			<label kind="synchronisation" x="1836" y="278">down!</label>
+		</transition>
+		<transition>
+			<source ref="id79"/>
+			<target ref="id77"/>
+			<label kind="synchronisation" x="1864" y="173">old?</label>
+		</transition>
+		<transition>
+			<source ref="id78"/>
+			<target ref="id79"/>
+			<label kind="synchronisation" x="1816" y="117">lower?</label>
+			<label kind="assignment" x="1824" y="133">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id80"/>
+			<target ref="id79"/>
+			<label kind="synchronisation" x="1836" y="38">lower?</label>
+			<label kind="assignment" x="1836" y="53">yr=0</label>
+		</transition>
+		<transition>
+			<source ref="id81"/>
+			<target ref="id80"/>
+			<label kind="synchronisation" x="1724" y="-42">syncTime?</label>
+		</transition>
+	</template>
+	<template>
+		<name>CA2</name>
+		<location id="id82" x="187" y="399">
+			<name x="211" y="399">s2_3</name>
+			<label kind="exponentialrate" x="177" y="433">1</label>
+		</location>
+		<location id="id83" x="-133" y="399">
+			<name x="-117" y="367">s2_4</name>
+			<label kind="exponentialrate" x="-143" y="433">1</label>
+		</location>
+		<location id="id84" x="507" y="-17">
+			<name x="523" y="-9">s2_2</name>
+			<label kind="exponentialrate" x="497" y="17">1</label>
+		</location>
+		<location id="id85" x="-133" y="-17">
+			<name x="-143" y="-47">s2_5</name>
+			<label kind="exponentialrate" x="-143" y="17">1</label>
+		</location>
+		<location id="id86" x="187" y="271">
+			<name x="195" y="279">s2_1</name>
+			<label kind="exponentialrate" x="177" y="305">1</label>
+		</location>
+		<location id="id87" x="187" y="-17">
+			<name x="177" y="-47">s2_0</name>
+			<label kind="exponentialrate" x="177" y="17">1</label>
+		</location>
+		<location id="id88" x="1100" y="624">
+			<name x="1090" y="594">CheckClutchClosed2</name>
+			<label kind="invariant" x="1090" y="639">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1090" y="658">1</label>
+		</location>
+		<location id="id89" x="1132" y="528">
+			<name x="1076" y="480">CheckClutchClosed</name>
+			<label kind="invariant" x="1084" y="496">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1122" y="562">1</label>
+		</location>
+		<location id="id90" x="1324" y="528">
+			<name x="1292" y="544">ClutchClose</name>
+			<label kind="exponentialrate" x="1314" y="562">1</label>
+		</location>
+		<location id="id91" x="1324" y="336">
+			<name x="1340" y="320">CheckGearSet2</name>
+			<label kind="invariant" x="1340" y="336">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="1314" y="370">1</label>
+		</location>
+		<location id="id92" x="1196" y="336">
+			<name x="1124" y="352">ClutchOpen</name>
+			<label kind="exponentialrate" x="1186" y="370">1</label>
+		</location>
+		<location id="id93" x="1196" y="176">
+			<name x="1188" y="136">CheckClutch</name>
+			<label kind="invariant" x="1180" y="152">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1186" y="210">1</label>
+		</location>
+		<location id="id94" x="1324" y="176">
+			<name x="1348" y="168">ReqSetGear2</name>
+			<label kind="exponentialrate" x="1314" y="210">1</label>
+		</location>
+		<location id="id95" x="1324" y="80">
+			<name x="1340" y="64">GearCheckNeu2</name>
+			<label kind="invariant" x="1340" y="80">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="1314" y="114">1</label>
+		</location>
+		<location id="id96" x="1324" y="-16">
+			<name x="1340" y="-48">ClutchOpen2</name>
+			<label kind="exponentialrate" x="1314" y="18">1</label>
+		</location>
+		<location id="id97" x="1100" y="-16">
+			<name x="1090" y="-46">CheckClutch2</name>
+			<label kind="invariant" x="1090" y="-1">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="1090" y="18">1</label>
+		</location>
+		<location id="id98" x="1036" y="432">
+			<name x="1060" y="416">ReqSetGear11</name>
+			<label kind="exponentialrate" x="1026" y="466">1</label>
+		</location>
+		<location id="id99" x="844" y="432">
+			<name x="716" y="416">CheckGearSet1</name>
+			<label kind="invariant" x="716" y="432">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="834" y="466">1</label>
+		</location>
+		<location id="id100" x="844" y="528">
+			<name x="852" y="496">ReqTorqueC</name>
+			<label kind="exponentialrate" x="834" y="562">1</label>
+		</location>
+		<location id="id101" x="844" y="624">
+			<name x="796" y="640">GearChanged</name>
+			<label kind="exponentialrate" x="834" y="658">1</label>
+		</location>
+		<location id="id102" x="844" y="336">
+			<name x="732" y="312">ReqSetGear12</name>
+			<label kind="exponentialrate" x="834" y="370">1</label>
+		</location>
+		<location id="id103" x="972" y="272">
+			<name x="1004" y="256">ReqSetGear</name>
+			<label kind="exponentialrate" x="962" y="306">1</label>
+		</location>
+		<location id="id104" x="972" y="176">
+			<name x="916" y="136">CheckSyncSpeed</name>
+			<label kind="invariant" x="924" y="152">GCTimer&lt;=155</label>
+			<label kind="exponentialrate" x="962" y="210">1</label>
+		</location>
+		<location id="id105" x="1068" y="112">
+			<name x="1084" y="80">CheckGearNeu</name>
+			<label kind="invariant" x="1084" y="112">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="1058" y="146">1</label>
+		</location>
+		<location id="id106" x="908" y="112">
+			<name x="804" y="104">ReqNeuGear</name>
+			<label kind="exponentialrate" x="898" y="146">1</label>
+		</location>
+		<location id="id107" x="908" y="-16">
+			<name x="860" y="-88">CheckTorque</name>
+			<label kind="invariant" x="852" y="-64">GCTimer&lt;=255</label>
+			<label kind="exponentialrate" x="898" y="18">1</label>
+		</location>
+		<location id="id108" x="716" y="176">
+			<name x="668" y="144">ReqSyncSpeed</name>
+			<label kind="exponentialrate" x="706" y="210">1</label>
+		</location>
+		<location id="id109" x="716" y="-16">
+			<name x="740" y="-40">Initiate</name>
+			<label kind="exponentialrate" x="706" y="18">1</label>
+		</location>
+		<location id="id110" x="-281" y="357">
+			<name x="-291" y="323">F21</name>
+			<label kind="exponentialrate" x="-291" y="391">1</label>
+		</location>
+		<location id="id111" x="-425" y="153">
+			<name x="-435" y="119">F2</name>
+			<label kind="exponentialrate" x="-435" y="187">1</label>
+		</location>
+		<location id="id112" x="-552" y="153">
+			<name x="-562" y="119">E31</name>
+			<label kind="exponentialrate" x="-562" y="187">1</label>
+		</location>
+		<location id="id113" x="-663" y="-8">
+			<name x="-673" y="-42">E21</name>
+			<label kind="exponentialrate" x="-673" y="26">1</label>
+		</location>
+		<location id="id114" x="-425" y="-8">
+			<name x="-435" y="-42">E22</name>
+			<label kind="exponentialrate" x="-435" y="26">1</label>
+		</location>
+		<location id="id115" x="-612" y="272">
+			<name x="-622" y="238">H22</name>
+			<label kind="exponentialrate" x="-622" y="306">1</label>
+		</location>
+		<location id="id116" x="-748" y="264">
+			<name x="-758" y="230">H21</name>
+			<label kind="exponentialrate" x="-758" y="298">1</label>
+		</location>
+		<location id="id117" x="-663" y="357">
+			<name x="-673" y="323">H2</name>
+			<label kind="exponentialrate" x="-673" y="391">1</label>
+		</location>
+		<location id="id118" x="-663" y="467">
+			<name x="-705" y="459">G22</name>
+			<label kind="exponentialrate" x="-673" y="501">1</label>
+		</location>
+		<location id="id119" x="-425" y="467">
+			<name x="-408" y="450">G21</name>
+			<label kind="exponentialrate" x="-435" y="501">1</label>
+		</location>
+		<location id="id120" x="-425" y="357">
+			<name x="-435" y="323">G2</name>
+			<label kind="exponentialrate" x="-435" y="391">1</label>
+		</location>
+		<location id="id121" x="-552" y="357">
+			<name x="-562" y="323">G23</name>
+			<label kind="exponentialrate" x="-562" y="391">1</label>
+		</location>
+		<location id="id122" x="-425" y="255">
+			<name x="-435" y="221">F22</name>
+			<label kind="exponentialrate" x="-435" y="289">1</label>
+		</location>
+		<location id="id123" x="2451" y="399">
+			<name x="2475" y="399">s2_3_</name>
+			<label kind="exponentialrate" x="2441" y="433">1</label>
+		</location>
+		<location id="id124" x="2131" y="399">
+			<name x="2147" y="367">s2_4_</name>
+			<label kind="exponentialrate" x="2121" y="433">1</label>
+		</location>
+		<location id="id125" x="2771" y="-17">
+			<name x="2787" y="-9">s2_2_</name>
+			<label kind="exponentialrate" x="2761" y="17">1</label>
+		</location>
+		<location id="id126" x="2131" y="-17">
+			<name x="2121" y="-47">s2_5_</name>
+			<label kind="exponentialrate" x="2121" y="17">1</label>
+		</location>
+		<location id="id127" x="2451" y="271">
+			<name x="2459" y="279">s2_1_</name>
+			<label kind="exponentialrate" x="2441" y="305">1</label>
+		</location>
+		<location id="id128" x="2451" y="-17">
+			<name x="2441" y="-47">s2_0_</name>
+			<label kind="exponentialrate" x="2441" y="17">1</label>
+		</location>
+		<location id="id129" x="3364" y="624">
+			<name x="3354" y="594">CheckClutchClosed2_</name>
+			<label kind="invariant" x="3354" y="639">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3354" y="658">1</label>
+		</location>
+		<location id="id130" x="3396" y="528">
+			<name x="3340" y="480">CheckClutchClosed_</name>
+			<label kind="invariant" x="3348" y="496">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3386" y="562">1</label>
+		</location>
+		<location id="id131" x="3588" y="528">
+			<name x="3556" y="544">ClutchClose_</name>
+			<label kind="exponentialrate" x="3578" y="562">1</label>
+		</location>
+		<location id="id132" x="3588" y="336">
+			<name x="3604" y="320">CheckGearSet2_</name>
+			<label kind="invariant" x="3604" y="336">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="3578" y="370">1</label>
+		</location>
+		<location id="id133" x="3460" y="336">
+			<name x="3388" y="352">ClutchOpen_</name>
+			<label kind="exponentialrate" x="3450" y="370">1</label>
+		</location>
+		<location id="id134" x="3460" y="176">
+			<name x="3452" y="136">CheckClutch_</name>
+			<label kind="invariant" x="3444" y="152">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3450" y="210">1</label>
+		</location>
+		<location id="id135" x="3588" y="176">
+			<name x="3612" y="168">ReqSetGear2_</name>
+			<label kind="exponentialrate" x="3578" y="210">1</label>
+		</location>
+		<location id="id136" x="3588" y="80">
+			<name x="3604" y="64">GearCheckNeu2_</name>
+			<label kind="invariant" x="3604" y="80">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="3578" y="114">1</label>
+		</location>
+		<location id="id137" x="3588" y="-16">
+			<name x="3604" y="-48">ClutchOpen2_</name>
+			<label kind="exponentialrate" x="3578" y="18">1</label>
+		</location>
+		<location id="id138" x="3364" y="-16">
+			<name x="3354" y="-46">CheckClutch2_</name>
+			<label kind="invariant" x="3354" y="-1">GCTimer&lt;=200</label>
+			<label kind="exponentialrate" x="3354" y="18">1</label>
+		</location>
+		<location id="id139" x="3300" y="432">
+			<name x="3324" y="416">ReqSetGear11_</name>
+			<label kind="exponentialrate" x="3290" y="466">1</label>
+		</location>
+		<location id="id140" x="3108" y="432">
+			<name x="2980" y="416">CheckGearSet1_</name>
+			<label kind="invariant" x="2980" y="432">GCTimer&lt;=350</label>
+			<label kind="exponentialrate" x="3098" y="466">1</label>
+		</location>
+		<location id="id141" x="3108" y="528">
+			<name x="3116" y="496">ReqTorqueC_</name>
+			<label kind="exponentialrate" x="3098" y="562">1</label>
+		</location>
+		<location id="id142" x="3108" y="624">
+			<name x="3060" y="640">GearChanged_</name>
+			<label kind="exponentialrate" x="3098" y="658">1</label>
+		</location>
+		<location id="id143" x="3108" y="336">
+			<name x="2996" y="312">ReqSetGear12_</name>
+			<label kind="exponentialrate" x="3098" y="370">1</label>
+		</location>
+		<location id="id144" x="3236" y="272">
+			<name x="3268" y="256">ReqSetGear_</name>
+			<label kind="exponentialrate" x="3226" y="306">1</label>
+		</location>
+		<location id="id145" x="3236" y="176">
+			<name x="3180" y="136">CheckSyncSpeed_</name>
+			<label kind="invariant" x="3188" y="152">GCTimer&lt;=155</label>
+			<label kind="exponentialrate" x="3226" y="210">1</label>
+		</location>
+		<location id="id146" x="3332" y="112">
+			<name x="3348" y="80">CheckGearNeu_</name>
+			<label kind="invariant" x="3348" y="112">GCTimer&lt;=250</label>
+			<label kind="exponentialrate" x="3322" y="146">1</label>
+		</location>
+		<location id="id147" x="3172" y="112">
+			<name x="3068" y="104">ReqNeuGear_</name>
+			<label kind="exponentialrate" x="3162" y="146">1</label>
+		</location>
+		<location id="id148" x="3172" y="-16">
+			<name x="3124" y="-88">CheckTorque_</name>
+			<label kind="invariant" x="3116" y="-64">GCTimer&lt;=255</label>
+			<label kind="exponentialrate" x="3162" y="18">1</label>
+		</location>
+		<location id="id149" x="2980" y="176">
+			<name x="2932" y="144">ReqSyncSpeed_</name>
+			<label kind="exponentialrate" x="2970" y="210">1</label>
+		</location>
+		<location id="id150" x="2980" y="-16">
+			<name x="3004" y="-40">Initiate_</name>
+			<label kind="exponentialrate" x="2970" y="18">1</label>
+		</location>
+		<location id="id151" x="1983" y="357">
+			<name x="1973" y="323">F21_</name>
+			<label kind="exponentialrate" x="1973" y="391">1</label>
+		</location>
+		<location id="id152" x="1839" y="153">
+			<name x="1829" y="119">F2_</name>
+			<label kind="exponentialrate" x="1829" y="187">1</label>
+		</location>
+		<location id="id153" x="1712" y="153">
+			<name x="1702" y="119">E31_</name>
+			<label kind="exponentialrate" x="1702" y="187">1</label>
+		</location>
+		<location id="id154" x="1601" y="-8">
+			<name x="1591" y="-42">E21_</name>
+			<label kind="exponentialrate" x="1591" y="26">1</label>
+		</location>
+		<location id="id155" x="1839" y="-8">
+			<name x="1829" y="-42">E22_</name>
+			<label kind="exponentialrate" x="1829" y="26">1</label>
+		</location>
+		<location id="id156" x="1652" y="272">
+			<name x="1642" y="238">H22_</name>
+			<label kind="exponentialrate" x="1642" y="306">1</label>
+		</location>
+		<location id="id157" x="1516" y="264">
+			<name x="1506" y="230">H21_</name>
+			<label kind="exponentialrate" x="1506" y="298">1</label>
+		</location>
+		<location id="id158" x="1601" y="357">
+			<name x="1591" y="323">H2_</name>
+			<label kind="exponentialrate" x="1591" y="391">1</label>
+		</location>
+		<location id="id159" x="1601" y="467">
+			<name x="1559" y="459">G22_</name>
+			<label kind="exponentialrate" x="1591" y="501">1</label>
+		</location>
+		<location id="id160" x="1839" y="467">
+			<name x="1856" y="450">G21_</name>
+			<label kind="exponentialrate" x="1829" y="501">1</label>
+		</location>
+		<location id="id161" x="1839" y="357">
+			<name x="1829" y="323">G2_</name>
+			<label kind="exponentialrate" x="1829" y="391">1</label>
+		</location>
+		<location id="id162" x="1712" y="357">
+			<name x="1702" y="323">G23_</name>
+			<label kind="exponentialrate" x="1702" y="391">1</label>
+		</location>
+		<location id="id163" x="1839" y="255">
+			<name x="1829" y="221">F22_</name>
+			<label kind="exponentialrate" x="1829" y="289">1</label>
+		</location>
+		<init ref="id87"/>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id87"/>
+			<label kind="synchronisation" x="1317" y="-238">exchange?</label>
+			<nail x="2252" y="-204"/>
+			<nail x="399" y="-204"/>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="1326" y="-340">exchange?</label>
+			<nail x="391" y="-306"/>
+			<nail x="2252" y="-306"/>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id112"/>
+			<label kind="synchronisation" x="-93" y="-85">old!</label>
+			<nail x="102" y="-59"/>
+			<nail x="-272" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id113"/>
+			<label kind="synchronisation" x="-246" y="-127">new!</label>
+			<nail x="119" y="-102"/>
+			<nail x="-561" y="-102"/>
+		</transition>
+		<transition>
+			<source ref="id116"/>
+			<target ref="id87"/>
+			<label kind="synchronisation" x="-246" y="76">up?</label>
+		</transition>
+		<transition>
+			<source ref="id115"/>
+			<target ref="id87"/>
+			<label kind="synchronisation" x="-221" y="102">up?</label>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id109"/>
+			<label kind="synchronisation" x="569" y="-42">_ReqNewGear!</label>
+		</transition>
+		<transition>
+			<source ref="id101"/>
+			<target ref="id87"/>
+			<label kind="synchronisation" x="485" y="579">_NewGear?</label>
+			<nail x="467" y="561"/>
+		</transition>
+		<transition>
+			<source ref="id83"/>
+			<target ref="id83"/>
+			<label kind="guard" x="-181" y="495">clock_c3&lt;=2</label>
+			<label kind="synchronisation" x="-213" y="511">_from_medium_slave!</label>
+			<nail x="-69" y="495"/>
+			<nail x="-197" y="495"/>
+		</transition>
+		<transition>
+			<source ref="id85"/>
+			<target ref="id87"/>
+			<label kind="synchronisation" x="-29" y="-41">_empty_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id83"/>
+			<target ref="id85"/>
+			<label kind="synchronisation" x="-269" y="167">_to_medium_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id82"/>
+			<target ref="id83"/>
+			<label kind="guard" x="27" y="375">clock_c3==1</label>
+			<label kind="synchronisation" x="51" y="407">_in_2!</label>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id82"/>
+			<label kind="synchronisation" x="190" y="329">_from_medium_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id84"/>
+			<target ref="id84"/>
+			<label kind="guard" x="467" y="-137">clock_c3&lt;=2</label>
+			<label kind="synchronisation" x="435" y="-161">_from_medium_slave!</label>
+			<nail x="443" y="-113"/>
+			<nail x="571" y="-113"/>
+		</transition>
+		<transition>
+			<source ref="id84"/>
+			<target ref="id87"/>
+			<label kind="synchronisation" x="275" y="-36">_from_medium_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id84"/>
+			<label kind="synchronisation" x="531" y="159">_out_2?</label>
+			<nail x="507" y="271"/>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id87"/>
+			<label kind="guard" x="375" y="155">clock_c3==0</label>
+			<label kind="synchronisation" x="391" y="171">_data1!</label>
+			<nail x="479" y="83"/>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id87"/>
+			<label kind="guard" x="-66" y="171">clock_c3==0</label>
+			<label kind="synchronisation" x="-42" y="195">_data2!</label>
+			<nail x="-90" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id87"/>
+			<label kind="guard" x="317" y="66">clock_c3==0</label>
+			<label kind="synchronisation" x="325" y="90">_data3!</label>
+			<nail x="326" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id87"/>
+			<label kind="guard" x="-51" y="76">clock_c3==0</label>
+			<label kind="synchronisation" x="-27" y="100">_data0!</label>
+			<nail x="29" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id86"/>
+			<label kind="synchronisation" x="54" y="91">_from_medium_slave!</label>
+			<label kind="assignment" x="71" y="108">clock_c3=0</label>
+			<nail x="182" y="117"/>
+		</transition>
+		<transition>
+			<source ref="id88"/>
+			<target ref="id101"/>
+			<label kind="synchronisation" x="916" y="624">_ClutchIsClosed!</label>
+		</transition>
+		<transition>
+			<source ref="id94"/>
+			<target ref="id88"/>
+			<label kind="synchronisation" x="1412" y="416">_CloseClutch?</label>
+			<label kind="assignment" x="1420" y="440">GCTimer=0</label>
+			<nail x="1484" y="240"/>
+			<nail x="1484" y="624"/>
+		</transition>
+		<transition>
+			<source ref="id89"/>
+			<target ref="id100"/>
+			<label kind="synchronisation" x="932" y="536">_ClutchIsClosed!</label>
+		</transition>
+		<transition>
+			<source ref="id90"/>
+			<target ref="id89"/>
+			<label kind="synchronisation" x="1180" y="512">_CloseClutch?</label>
+			<label kind="assignment" x="1188" y="528">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id91"/>
+			<target ref="id90"/>
+			<label kind="synchronisation" x="1264" y="417">_GearSet!</label>
+		</transition>
+		<transition>
+			<source ref="id92"/>
+			<target ref="id91"/>
+			<label kind="synchronisation" x="1228" y="312">_ReqSet?</label>
+			<label kind="assignment" x="1212" y="336">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id94"/>
+			<target ref="id91"/>
+			<label kind="synchronisation" x="1324" y="239">_void?</label>
+			<label kind="assignment" x="1284" y="248">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id93"/>
+			<target ref="id92"/>
+			<label kind="synchronisation" x="1136" y="241">_ClutchIsOpen!</label>
+		</transition>
+		<transition>
+			<source ref="id104"/>
+			<target ref="id93"/>
+			<label kind="synchronisation" x="1052" y="160">_OpenClutch?</label>
+			<label kind="assignment" x="1060" y="176">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id95"/>
+			<target ref="id94"/>
+			<label kind="synchronisation" x="1332" y="120">_GearNeu!</label>
+		</transition>
+		<transition>
+			<source ref="id96"/>
+			<target ref="id95"/>
+			<label kind="synchronisation" x="1340" y="16">_ReqNeu?</label>
+			<label kind="assignment" x="1332" y="32">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id97"/>
+			<target ref="id96"/>
+			<label kind="synchronisation" x="1196" y="-40">_ClutchIsOpen!</label>
+		</transition>
+		<transition>
+			<source ref="id107"/>
+			<target ref="id97"/>
+			<label kind="synchronisation" x="980" y="-32">_OpenClutch?</label>
+			<label kind="assignment" x="980" y="-8">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id98"/>
+			<target ref="id99"/>
+			<label kind="synchronisation" x="908" y="408">_ReqSet?</label>
+			<label kind="assignment" x="900" y="432">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id103"/>
+			<target ref="id98"/>
+			<label kind="guard" x="964" y="336">GCTimer&lt;200</label>
+			<label kind="synchronisation" x="988" y="352">_sport!</label>
+		</transition>
+		<transition>
+			<source ref="id100"/>
+			<target ref="id101"/>
+			<label kind="synchronisation" x="784" y="561">_ReqTorque!</label>
+		</transition>
+		<transition>
+			<source ref="id99"/>
+			<target ref="id100"/>
+			<label kind="synchronisation" x="784" y="465">_GearSet!</label>
+		</transition>
+		<transition>
+			<source ref="id102"/>
+			<target ref="id99"/>
+			<label kind="synchronisation" x="780" y="352">_ReqSet?</label>
+			<label kind="assignment" x="764" y="368">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id103"/>
+			<target ref="id102"/>
+			<label kind="guard" x="812" y="272">GCTimer&lt;250</label>
+			<label kind="synchronisation" x="848" y="289">_drive!</label>
+		</transition>
+		<transition>
+			<source ref="id104"/>
+			<target ref="id103"/>
+			<label kind="guard" x="980" y="200">GCTimer&lt;150</label>
+			<label kind="synchronisation" x="988" y="216">_SpeedSet!</label>
+		</transition>
+		<transition>
+			<source ref="id108"/>
+			<target ref="id104"/>
+			<label kind="synchronisation" x="796" y="184">_ReqSpeed?</label>
+			<label kind="assignment" x="796" y="200">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id105"/>
+			<target ref="id108"/>
+			<label kind="synchronisation" x="804" y="136">_GearNeu!</label>
+		</transition>
+		<transition>
+			<source ref="id106"/>
+			<target ref="id105"/>
+			<label kind="synchronisation" x="948" y="64">_ReqNeu?</label>
+			<label kind="assignment" x="940" y="88">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id107"/>
+			<target ref="id106"/>
+			<label kind="guard" x="796" y="24">GCTimer&lt;250</label>
+			<label kind="synchronisation" x="804" y="48">_TorqueZero!</label>
+		</transition>
+		<transition>
+			<source ref="id109"/>
+			<target ref="id107"/>
+			<label kind="synchronisation" x="752" y="-31">RqZeroTorque?</label>
+			<label kind="assignment" x="752" y="-16">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id109"/>
+			<target ref="id108"/>
+			<label kind="synchronisation" x="716" y="63">_void?</label>
+		</transition>
+		<transition>
+			<source ref="id110"/>
+			<target ref="id120"/>
+			<label kind="synchronisation" x="-407" y="340">down?</label>
+		</transition>
+		<transition>
+			<source ref="id111"/>
+			<target ref="id110"/>
+			<label kind="synchronisation" x="-340" y="230">new!</label>
+		</transition>
+		<transition>
+			<source ref="id111"/>
+			<target ref="id122"/>
+			<label kind="synchronisation" x="-425" y="187">old!</label>
+		</transition>
+		<transition>
+			<source ref="id122"/>
+			<target ref="id120"/>
+			<label kind="synchronisation" x="-425" y="289">down?</label>
+		</transition>
+		<transition>
+			<source ref="id120"/>
+			<target ref="id121"/>
+			<label kind="synchronisation" x="-534" y="340">old!</label>
+		</transition>
+		<transition>
+			<source ref="id121"/>
+			<target ref="id117"/>
+			<label kind="synchronisation" x="-645" y="340">raise!</label>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id118"/>
+			<label kind="synchronisation" x="-645" y="450">syncTime!</label>
+		</transition>
+		<transition>
+			<source ref="id120"/>
+			<target ref="id119"/>
+			<label kind="synchronisation" x="-425" y="395">new!</label>
+		</transition>
+		<transition>
+			<source ref="id118"/>
+			<target ref="id117"/>
+			<label kind="synchronisation" x="-663" y="395">raise!</label>
+		</transition>
+		<transition>
+			<source ref="id117"/>
+			<target ref="id116"/>
+			<label kind="synchronisation" x="-730" y="294">new!</label>
+		</transition>
+		<transition>
+			<source ref="id117"/>
+			<target ref="id115"/>
+			<label kind="synchronisation" x="-637" y="298">old!</label>
+		</transition>
+		<transition>
+			<source ref="id114"/>
+			<target ref="id111"/>
+			<label kind="synchronisation" x="-425" y="56">lower!</label>
+		</transition>
+		<transition>
+			<source ref="id112"/>
+			<target ref="id111"/>
+			<label kind="synchronisation" x="-534" y="136">lower!</label>
+		</transition>
+		<transition>
+			<source ref="id113"/>
+			<target ref="id114"/>
+			<label kind="synchronisation" x="-644" y="-25">syncTime!</label>
+		</transition>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id153"/>
+			<label kind="synchronisation" x="2171" y="-85">old!</label>
+			<nail x="2366" y="-59"/>
+			<nail x="1992" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id154"/>
+			<label kind="synchronisation" x="2018" y="-127">new!</label>
+			<nail x="2383" y="-102"/>
+			<nail x="1703" y="-102"/>
+		</transition>
+		<transition>
+			<source ref="id157"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="2018" y="76">up?</label>
+		</transition>
+		<transition>
+			<source ref="id156"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="2043" y="102">up?</label>
+		</transition>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id150"/>
+			<label kind="synchronisation" x="2833" y="-42">_ReqNewGear!</label>
+		</transition>
+		<transition>
+			<source ref="id142"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="2749" y="579">_NewGear?</label>
+			<nail x="2731" y="561"/>
+		</transition>
+		<transition>
+			<source ref="id124"/>
+			<target ref="id124"/>
+			<label kind="guard" x="2083" y="495">clock_c3&lt;=2</label>
+			<label kind="synchronisation" x="2051" y="511">_from_medium_slave!</label>
+			<nail x="2195" y="495"/>
+			<nail x="2067" y="495"/>
+		</transition>
+		<transition>
+			<source ref="id126"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="2235" y="-41">_empty_slave!</label>
+		</transition>
+		<transition>
+			<source ref="id124"/>
+			<target ref="id126"/>
+			<label kind="synchronisation" x="1995" y="167">_to_medium_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id123"/>
+			<target ref="id124"/>
+			<label kind="guard" x="2291" y="375">clock_c3==1</label>
+			<label kind="synchronisation" x="2315" y="407">_in_2!</label>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id123"/>
+			<label kind="synchronisation" x="2454" y="329">_from_medium_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id125"/>
+			<target ref="id125"/>
+			<label kind="guard" x="2731" y="-137">clock_c3&lt;=2</label>
+			<label kind="synchronisation" x="2699" y="-161">_from_medium_slave!</label>
+			<nail x="2707" y="-113"/>
+			<nail x="2835" y="-113"/>
+		</transition>
+		<transition>
+			<source ref="id125"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="2539" y="-36">_from_medium_slave?</label>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id125"/>
+			<label kind="synchronisation" x="2795" y="159">_out_2?</label>
+			<nail x="2771" y="271"/>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id128"/>
+			<label kind="guard" x="2639" y="155">clock_c3==0</label>
+			<label kind="synchronisation" x="2655" y="171">_data1!</label>
+			<nail x="2743" y="83"/>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id128"/>
+			<label kind="guard" x="2198" y="171">clock_c3==0</label>
+			<label kind="synchronisation" x="2222" y="195">_data2!</label>
+			<nail x="2174" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id128"/>
+			<label kind="guard" x="2581" y="66">clock_c3==0</label>
+			<label kind="synchronisation" x="2589" y="90">_data3!</label>
+			<nail x="2590" y="91"/>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id128"/>
+			<label kind="guard" x="2213" y="76">clock_c3==0</label>
+			<label kind="synchronisation" x="2237" y="100">_data0!</label>
+			<nail x="2293" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id127"/>
+			<label kind="synchronisation" x="2318" y="91">_from_medium_slave!</label>
+			<label kind="assignment" x="2335" y="108">clock_c3=0</label>
+			<nail x="2446" y="117"/>
+		</transition>
+		<transition>
+			<source ref="id129"/>
+			<target ref="id142"/>
+			<label kind="synchronisation" x="3180" y="624">_ClutchIsClosed!</label>
+		</transition>
+		<transition>
+			<source ref="id135"/>
+			<target ref="id129"/>
+			<label kind="synchronisation" x="3676" y="416">_CloseClutch?</label>
+			<label kind="assignment" x="3684" y="440">GCTimer=0</label>
+			<nail x="3748" y="240"/>
+			<nail x="3748" y="624"/>
+		</transition>
+		<transition>
+			<source ref="id130"/>
+			<target ref="id141"/>
+			<label kind="synchronisation" x="3196" y="536">_ClutchIsClosed!</label>
+		</transition>
+		<transition>
+			<source ref="id131"/>
+			<target ref="id130"/>
+			<label kind="synchronisation" x="3444" y="512">_CloseClutch?</label>
+			<label kind="assignment" x="3452" y="528">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id132"/>
+			<target ref="id131"/>
+			<label kind="synchronisation" x="3528" y="417">_GearSet!</label>
+		</transition>
+		<transition>
+			<source ref="id133"/>
+			<target ref="id132"/>
+			<label kind="synchronisation" x="3492" y="312">_ReqSet?</label>
+			<label kind="assignment" x="3476" y="336">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id135"/>
+			<target ref="id132"/>
+			<label kind="synchronisation" x="3588" y="239">_void?</label>
+			<label kind="assignment" x="3548" y="248">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id134"/>
+			<target ref="id133"/>
+			<label kind="synchronisation" x="3400" y="241">_ClutchIsOpen!</label>
+		</transition>
+		<transition>
+			<source ref="id145"/>
+			<target ref="id134"/>
+			<label kind="synchronisation" x="3316" y="160">_OpenClutch?</label>
+			<label kind="assignment" x="3324" y="176">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id136"/>
+			<target ref="id135"/>
+			<label kind="synchronisation" x="3596" y="120">_GearNeu!</label>
+		</transition>
+		<transition>
+			<source ref="id137"/>
+			<target ref="id136"/>
+			<label kind="synchronisation" x="3604" y="16">_ReqNeu?</label>
+			<label kind="assignment" x="3596" y="32">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id138"/>
+			<target ref="id137"/>
+			<label kind="synchronisation" x="3460" y="-40">_ClutchIsOpen!</label>
+		</transition>
+		<transition>
+			<source ref="id148"/>
+			<target ref="id138"/>
+			<label kind="synchronisation" x="3244" y="-32">_OpenClutch?</label>
+			<label kind="assignment" x="3244" y="-8">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id139"/>
+			<target ref="id140"/>
+			<label kind="synchronisation" x="3172" y="408">_ReqSet?</label>
+			<label kind="assignment" x="3164" y="432">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id144"/>
+			<target ref="id139"/>
+			<label kind="guard" x="3228" y="336">GCTimer&lt;200</label>
+			<label kind="synchronisation" x="3252" y="352">_sport!</label>
+		</transition>
+		<transition>
+			<source ref="id141"/>
+			<target ref="id142"/>
+			<label kind="synchronisation" x="3048" y="561">_ReqTorque!</label>
+		</transition>
+		<transition>
+			<source ref="id140"/>
+			<target ref="id141"/>
+			<label kind="synchronisation" x="3048" y="465">_GearSet!</label>
+		</transition>
+		<transition>
+			<source ref="id143"/>
+			<target ref="id140"/>
+			<label kind="synchronisation" x="3044" y="352">_ReqSet?</label>
+			<label kind="assignment" x="3028" y="368">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id144"/>
+			<target ref="id143"/>
+			<label kind="guard" x="3076" y="272">GCTimer&lt;250</label>
+			<label kind="synchronisation" x="3112" y="289">_drive!</label>
+		</transition>
+		<transition>
+			<source ref="id145"/>
+			<target ref="id144"/>
+			<label kind="guard" x="3244" y="200">GCTimer&lt;150</label>
+			<label kind="synchronisation" x="3252" y="216">_SpeedSet!</label>
+		</transition>
+		<transition>
+			<source ref="id149"/>
+			<target ref="id145"/>
+			<label kind="synchronisation" x="3060" y="184">_ReqSpeed?</label>
+			<label kind="assignment" x="3060" y="200">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id146"/>
+			<target ref="id149"/>
+			<label kind="synchronisation" x="3068" y="136">_GearNeu!</label>
+		</transition>
+		<transition>
+			<source ref="id147"/>
+			<target ref="id146"/>
+			<label kind="synchronisation" x="3212" y="64">_ReqNeu?</label>
+			<label kind="assignment" x="3204" y="88">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id148"/>
+			<target ref="id147"/>
+			<label kind="guard" x="3060" y="24">GCTimer&lt;250</label>
+			<label kind="synchronisation" x="3068" y="48">_TorqueZero!</label>
+		</transition>
+		<transition>
+			<source ref="id150"/>
+			<target ref="id148"/>
+			<label kind="synchronisation" x="3016" y="-31">RqZeroTorque?</label>
+			<label kind="assignment" x="3016" y="-16">GCTimer=0</label>
+		</transition>
+		<transition>
+			<source ref="id150"/>
+			<target ref="id149"/>
+			<label kind="synchronisation" x="2980" y="63">_void?</label>
+		</transition>
+		<transition>
+			<source ref="id151"/>
+			<target ref="id161"/>
+			<label kind="synchronisation" x="1857" y="340">down?</label>
+		</transition>
+		<transition>
+			<source ref="id152"/>
+			<target ref="id151"/>
+			<label kind="synchronisation" x="1924" y="230">new!</label>
+		</transition>
+		<transition>
+			<source ref="id152"/>
+			<target ref="id163"/>
+			<label kind="synchronisation" x="1839" y="187">old!</label>
+		</transition>
+		<transition>
+			<source ref="id163"/>
+			<target ref="id161"/>
+			<label kind="synchronisation" x="1839" y="289">down?</label>
+		</transition>
+		<transition>
+			<source ref="id161"/>
+			<target ref="id162"/>
+			<label kind="synchronisation" x="1730" y="340">old!</label>
+		</transition>
+		<transition>
+			<source ref="id162"/>
+			<target ref="id158"/>
+			<label kind="synchronisation" x="1619" y="340">raise!</label>
+		</transition>
+		<transition>
+			<source ref="id160"/>
+			<target ref="id159"/>
+			<label kind="synchronisation" x="1619" y="450">syncTime!</label>
+		</transition>
+		<transition>
+			<source ref="id161"/>
+			<target ref="id160"/>
+			<label kind="synchronisation" x="1839" y="395">new!</label>
+		</transition>
+		<transition>
+			<source ref="id159"/>
+			<target ref="id158"/>
+			<label kind="synchronisation" x="1601" y="395">raise!</label>
+		</transition>
+		<transition>
+			<source ref="id158"/>
+			<target ref="id157"/>
+			<label kind="synchronisation" x="1534" y="294">new!</label>
+		</transition>
+		<transition>
+			<source ref="id158"/>
+			<target ref="id156"/>
+			<label kind="synchronisation" x="1627" y="298">old!</label>
+		</transition>
+		<transition>
+			<source ref="id155"/>
+			<target ref="id152"/>
+			<label kind="synchronisation" x="1839" y="56">lower!</label>
+		</transition>
+		<transition>
+			<source ref="id153"/>
+			<target ref="id152"/>
+			<label kind="synchronisation" x="1730" y="136">lower!</label>
+		</transition>
+		<transition>
+			<source ref="id154"/>
+			<target ref="id155"/>
+			<label kind="synchronisation" x="1620" y="-25">syncTime!</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+
+
+// List one or more processes to be composed into a system.
+system CA1, CA2;</system>
+	<queries>
+		<query>
+			<formula>simulate [&lt;=1000; 100] {1}
+</formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

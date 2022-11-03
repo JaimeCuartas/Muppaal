@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+<declaration>broadcast chan syncTime , new , old , raise , lower , up , down ;
+clock yr ;
+clock t ;
+clock clock_c3 ;
+broadcast chan hello , _empty_slave , _data0 , _data1 , _data2 , _data3 , _to_medium_slave , _from_medium_slave , _in_2 , _out_2 ;
+clock GCTimer ;
+broadcast chan _ClutchIsClosed , _CloseClutch , _GearSet , _ReqSet , _ReqNewGear , RqZeroTorque , _OpenClutch , _TorqueZero , _NewGear , _ClutchIsOpen , _ReqNeu , _GearNeu , _SpeedSet , _ReqSpeed , _drive , _sport , _ReqTorque , _void ;
+</declaration>
+<template>
+<name x="5" y="5">Template</name>
+<declaration></declaration>
+<location id="id0" x="76" y="399">
+<name x="100" y="399">s2_3</name>
+<label kind="exponentialrate" x="66" y="433">1</label>
+</location>
+<location id="id1" x="-244" y="399">
+<name x="-228" y="367">s2_4</name>
+<label kind="exponentialrate" x="-254" y="433">1</label>
+</location>
+<location id="id2" x="396" y="-17">
+<name x="412" y="-9">s2_2</name>
+<label kind="exponentialrate" x="386" y="17">1</label>
+</location>
+<location id="id3" x="-244" y="-17">
+<name x="-254" y="-47">s2_5</name>
+<label kind="exponentialrate" x="-254" y="17">1</label>
+</location>
+<location id="id4" x="76" y="271">
+<name x="84" y="279">s2_1</name>
+<label kind="exponentialrate" x="66" y="305">1</label>
+</location>
+<location id="id5" x="76" y="-17">
+<name x="66" y="-47">s2_0</name>
+<label kind="exponentialrate" x="66" y="17">1</label>
+</location>
+<location id="id6" x="1103" y="624">
+<name x="1093" y="594">CheckClutchClosed2</name>
+<label kind="invariant" x="1093" y="639">GCTimer&lt;=200</label>
+<label kind="exponentialrate" x="1093" y="658">1</label>
+</location>
+<location id="id7" x="1135" y="528">
+<name x="1079" y="480">CheckClutchClosed</name>
+<label kind="invariant" x="1087" y="496">GCTimer&lt;=200</label>
+<label kind="exponentialrate" x="1125" y="562">1</label>
+</location>
+<location id="id8" x="1327" y="528">
+<name x="1295" y="544">ClutchClose</name>
+<label kind="exponentialrate" x="1317" y="562">1</label>
+</location>
+<location id="id9" x="1327" y="336">
+<name x="1343" y="320">CheckGearSet2</name>
+<label kind="invariant" x="1343" y="336">GCTimer&lt;=350</label>
+<label kind="exponentialrate" x="1317" y="370">1</label>
+</location>
+<location id="id10" x="1199" y="336">
+<name x="1127" y="352">ClutchOpen</name>
+<label kind="exponentialrate" x="1189" y="370">1</label>
+</location>
+<location id="id11" x="1199" y="176">
+<name x="1191" y="136">CheckClutch</name>
+<label kind="invariant" x="1183" y="152">GCTimer&lt;=200</label>
+<label kind="exponentialrate" x="1189" y="210">1</label>
+</location>
+<location id="id12" x="1327" y="176">
+<name x="1351" y="168">ReqSetGear2</name>
+<label kind="exponentialrate" x="1317" y="210">1</label>
+</location>
+<location id="id13" x="1327" y="80">
+<name x="1343" y="64">GearCheckNeu2</name>
+<label kind="invariant" x="1343" y="80">GCTimer&lt;=250</label>
+<label kind="exponentialrate" x="1317" y="114">1</label>
+</location>
+<location id="id14" x="1327" y="-16">
+<name x="1343" y="-48">ClutchOpen2</name>
+<label kind="exponentialrate" x="1317" y="18">1</label>
+</location>
+<location id="id15" x="1103" y="-16">
+<name x="1093" y="-46">CheckClutch2</name>
+<label kind="invariant" x="1093" y="-1">GCTimer&lt;=200</label>
+<label kind="exponentialrate" x="1093" y="18">1</label>
+</location>
+<location id="id16" x="1039" y="432">
+<name x="1063" y="416">ReqSetGear11</name>
+<label kind="exponentialrate" x="1029" y="466">1</label>
+</location>
+<location id="id17" x="847" y="432">
+<name x="719" y="416">CheckGearSet1</name>
+<label kind="invariant" x="719" y="432">GCTimer&lt;=350</label>
+<label kind="exponentialrate" x="837" y="466">1</label>
+</location>
+<location id="id18" x="847" y="528">
+<name x="855" y="496">ReqTorqueC</name>
+<label kind="exponentialrate" x="837" y="562">1</label>
+</location>
+<location id="id19" x="847" y="624">
+<name x="799" y="640">GearChanged</name>
+<label kind="exponentialrate" x="837" y="658">1</label>
+</location>
+<location id="id20" x="847" y="336">
+<name x="735" y="312">ReqSetGear12</name>
+<label kind="exponentialrate" x="837" y="370">1</label>
+</location>
+<location id="id21" x="975" y="272">
+<name x="1007" y="256">ReqSetGear</name>
+<label kind="exponentialrate" x="965" y="306">1</label>
+</location>
+<location id="id22" x="975" y="176">
+<name x="919" y="136">CheckSyncSpeed</name>
+<label kind="invariant" x="927" y="152">GCTimer&lt;=155</label>
+<label kind="exponentialrate" x="965" y="210">1</label>
+</location>
+<location id="id23" x="1071" y="112">
+<name x="1087" y="80">CheckGearNeu</name>
+<label kind="invariant" x="1087" y="112">GCTimer&lt;=250</label>
+<label kind="exponentialrate" x="1061" y="146">1</label>
+</location>
+<location id="id24" x="911" y="112">
+<name x="807" y="104">ReqNeuGear</name>
+<label kind="exponentialrate" x="901" y="146">1</label>
+</location>
+<location id="id25" x="911" y="-16">
+<name x="863" y="-88">CheckTorque</name>
+<label kind="invariant" x="855" y="-64">GCTimer&lt;=255</label>
+<label kind="exponentialrate" x="901" y="18">1</label>
+</location>
+<location id="id26" x="719" y="176">
+<name x="671" y="144">ReqSyncSpeed</name>
+<label kind="exponentialrate" x="709" y="210">1</label>
+</location>
+<location id="id27" x="719" y="-16">
+<name x="743" y="-40">Initiate</name>
+<label kind="exponentialrate" x="709" y="18">1</label>
+</location>
+<location id="id28" x="-943" y="261">
+<name x="-983" y="253">H1</name>
+<label kind="exponentialrate" x="-953" y="295">1</label>
+</location>
+<location id="id29" x="-783" y="261">
+<name x="-759" y="245">H2</name>
+<label kind="exponentialrate" x="-793" y="295">1</label>
+</location>
+<location id="id30" x="-815" y="485">
+<name x="-855" y="477">G2</name>
+<label kind="exponentialrate" x="-825" y="519">1</label>
+</location>
+<location id="id31" x="-591" y="485">
+<name x="-567" y="469">G1</name>
+<label kind="exponentialrate" x="-601" y="519">1</label>
+</location>
+<location id="id32" x="-687" y="357">
+<name x="-697" y="327">G3</name>
+<label kind="exponentialrate" x="-697" y="391">1</label>
+</location>
+<location id="id33" x="-815" y="357">
+<name x="-847" y="349">H</name>
+<label kind="exponentialrate" x="-825" y="391">1</label>
+</location>
+<location id="id34" x="-399" y="357">
+<name x="-409" y="327">F1</name>
+<label kind="exponentialrate" x="-403" y="375">1</label>
+</location>
+<location id="id35" x="-590" y="358">
+<name x="-600" y="328">G</name>
+<label kind="exponentialrate" x="-600" y="392">1</label>
+</location>
+<location id="id36" x="-591" y="229">
+<name x="-601" y="199">F2</name>
+<label kind="exponentialrate" x="-601" y="263">1</label>
+</location>
+<location id="id37" x="-703" y="133">
+<name x="-713" y="103">E3</name>
+<label kind="exponentialrate" x="-713" y="167">1</label>
+</location>
+<location id="id38" x="-598" y="129">
+<name x="-608" y="99">F</name>
+<label kind="exponentialrate" x="-608" y="163">1</label>
+</location>
+<location id="id39" x="-598" y="-24">
+<name x="-608" y="-54">E2</name>
+<label kind="exponentialrate" x="-608" y="10">1</label>
+</location>
+<location id="id40" x="-815" y="-27">
+<name x="-825" y="-57">E1</name>
+<label kind="exponentialrate" x="-825" y="7">1</label>
+</location>
+<init ref="id5"/>
+<transition>
+<source ref="id15"/>
+<target ref="id26"/>
+<label kind="synchronisation" x="0" y="0">hello!</label>
+</transition>
+<transition>
+<source ref="id5"/>
+<target ref="id37"/>
+<label kind="synchronisation" x="-212" y="-102">old?</label>
+<nail  x="0" y="-76"/>
+<nail  x="-416" y="-76"/>
+</transition>
+<transition>
+<source ref="id5"/>
+<target ref="id40"/>
+<label kind="synchronisation" x="-374" y="-153">new?</label>
+<label kind="assignment" x="-374" y="-136">yr=0</label>
+<nail  x="0" y="-110"/>
+<nail  x="-705" y="-110"/>
+</transition>
+<transition>
+<source ref="id28"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="-501" y="85">up!</label>
+<label kind="guard" x="-501" y="68">yr&gt;10 , yr&lt;30</label>
+</transition>
+<transition>
+<source ref="id29"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="-459" y="127">up!</label>
+<label kind="guard" x="-501" y="110">yr&gt;20 , yr&lt;40</label>
+</transition>
+<transition>
+<source ref="id19"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="450" y="450">_NewGear!</label>
+<nail  x="518" y="578"/>
+</transition>
+<transition>
+<source ref="id5"/>
+<target ref="id27"/>
+<label kind="synchronisation" x="501" y="-42">_ReqNewGear?</label>
+</transition>
+<transition>
+<source ref="id1"/>
+<target ref="id1"/>
+<label kind="synchronisation" x="-324" y="511">_from_medium_slave?</label>
+<nail  x="-180" y="495"/>
+<nail  x="-308" y="495"/>
+</transition>
+<transition>
+<source ref="id3"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="-140" y="-41">_empty_slave?</label>
+</transition>
+<transition>
+<source ref="id1"/>
+<target ref="id3"/>
+<label kind="synchronisation" x="-380" y="167">_to_medium_slave!</label>
+<label kind="guard" x="-356" y="151">clock_c3==2</label>
+</transition>
+<transition>
+<source ref="id0"/>
+<target ref="id1"/>
+<label kind="synchronisation" x="-60" y="407">_in_2?</label>
+</transition>
+<transition>
+<source ref="id4"/>
+<target ref="id0"/>
+<label kind="synchronisation" x="79" y="329">_from_medium_slave!</label>
+<label kind="guard" x="79" y="312">clock_c3==0</label>
+</transition>
+<transition>
+<source ref="id2"/>
+<target ref="id2"/>
+<label kind="synchronisation" x="324" y="-161">_from_medium_slave?</label>
+<nail  x="332" y="-113"/>
+<nail  x="460" y="-113"/>
+</transition>
+<transition>
+<source ref="id2"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="164" y="-36">_from_medium_slave!</label>
+<label kind="guard" x="198" y="-53">clock_c3==2</label>
+</transition>
+<transition>
+<source ref="id4"/>
+<target ref="id2"/>
+<label kind="synchronisation" x="420" y="159">_out_2!</label>
+<label kind="guard" x="396" y="135">clock_c3==0</label>
+<nail  x="396" y="271"/>
+</transition>
+<transition>
+<source ref="id4"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="280" y="171">_data1?</label>
+<nail  x="368" y="83"/>
+</transition>
+<transition>
+<source ref="id4"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="-153" y="195">_data2?</label>
+<nail  x="-201" y="91"/>
+</transition>
+<transition>
+<source ref="id4"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="214" y="90">_data3?</label>
+<nail  x="215" y="91"/>
+</transition>
+<transition>
+<source ref="id4"/>
+<target ref="id5"/>
+<label kind="synchronisation" x="-138" y="100">_data0?</label>
+<nail  x="-82" y="100"/>
+</transition>
+<transition>
+<source ref="id5"/>
+<target ref="id4"/>
+<label kind="synchronisation" x="-57" y="91">_from_medium_slave?</label>
+<nail  x="71" y="117"/>
+</transition>
+<transition>
+<source ref="id6"/>
+<target ref="id19"/>
+<label kind="synchronisation" x="919" y="624">_ClutchIsClosed?</label>
+</transition>
+<transition>
+<source ref="id12"/>
+<target ref="id6"/>
+<label kind="synchronisation" x="1415" y="416">_CloseClutch!</label>
+<label kind="assignment" x="1423" y="440">GCTimer=0</label>
+<nail  x="1487" y="240"/>
+<nail  x="1487" y="624"/>
+</transition>
+<transition>
+<source ref="id7"/>
+<target ref="id18"/>
+<label kind="synchronisation" x="935" y="536">_ClutchIsClosed?</label>
+</transition>
+<transition>
+<source ref="id8"/>
+<target ref="id7"/>
+<label kind="synchronisation" x="1183" y="512">_CloseClutch!</label>
+<label kind="assignment" x="1191" y="528">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id9"/>
+<target ref="id8"/>
+<label kind="synchronisation" x="1267" y="417">_GearSet?</label>
+</transition>
+<transition>
+<source ref="id10"/>
+<target ref="id9"/>
+<label kind="synchronisation" x="1231" y="312">_ReqSet!</label>
+<label kind="assignment" x="1215" y="336">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id12"/>
+<target ref="id9"/>
+<label kind="synchronisation" x="1327" y="239">_void!</label>
+<label kind="assignment" x="1287" y="248">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id11"/>
+<target ref="id10"/>
+<label kind="synchronisation" x="1139" y="241">_ClutchIsOpen?</label>
+</transition>
+<transition>
+<source ref="id22"/>
+<target ref="id11"/>
+<label kind="synchronisation" x="1055" y="160">_OpenClutch!</label>
+<label kind="guard" x="1063" y="144">GCTimer&gt;=150</label>
+<label kind="assignment" x="1063" y="176">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id13"/>
+<target ref="id12"/>
+<label kind="synchronisation" x="1335" y="120">_GearNeu?</label>
+</transition>
+<transition>
+<source ref="id14"/>
+<target ref="id13"/>
+<label kind="synchronisation" x="1343" y="16">_ReqNeu!</label>
+<label kind="assignment" x="1335" y="32">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id15"/>
+<target ref="id14"/>
+<label kind="synchronisation" x="1199" y="-40">_ClutchIsOpen?</label>
+</transition>
+<transition>
+<source ref="id25"/>
+<target ref="id15"/>
+<label kind="synchronisation" x="983" y="-32">_OpenClutch!</label>
+<label kind="guard" x="975" y="-48">GCTimer&gt;=250</label>
+<label kind="assignment" x="983" y="-8">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id16"/>
+<target ref="id17"/>
+<label kind="synchronisation" x="911" y="408">_ReqSet!</label>
+<label kind="assignment" x="903" y="432">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id21"/>
+<target ref="id16"/>
+<label kind="synchronisation" x="991" y="352">_sport?</label>
+</transition>
+<transition>
+<source ref="id18"/>
+<target ref="id19"/>
+<label kind="synchronisation" x="787" y="561">_ReqTorque!</label>
+</transition>
+<transition>
+<source ref="id17"/>
+<target ref="id18"/>
+<label kind="synchronisation" x="787" y="465">_GearSet?</label>
+</transition>
+<transition>
+<source ref="id20"/>
+<target ref="id17"/>
+<label kind="synchronisation" x="783" y="352">_ReqSet!</label>
+<label kind="assignment" x="767" y="368">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id21"/>
+<target ref="id20"/>
+<label kind="synchronisation" x="851" y="289">_drive?</label>
+</transition>
+<transition>
+<source ref="id22"/>
+<target ref="id21"/>
+<label kind="synchronisation" x="991" y="216">_SpeedSet?</label>
+</transition>
+<transition>
+<source ref="id26"/>
+<target ref="id22"/>
+<label kind="synchronisation" x="799" y="184">_ReqSpeed!</label>
+<label kind="assignment" x="799" y="200">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id23"/>
+<target ref="id26"/>
+<label kind="synchronisation" x="807" y="136">_GearNeu?</label>
+</transition>
+<transition>
+<source ref="id24"/>
+<target ref="id23"/>
+<label kind="synchronisation" x="951" y="64">_ReqNeu!</label>
+<label kind="assignment" x="943" y="88">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id25"/>
+<target ref="id24"/>
+<label kind="synchronisation" x="807" y="48">_TorqueZero?</label>
+</transition>
+<transition>
+<source ref="id27"/>
+<target ref="id25"/>
+<label kind="synchronisation" x="755" y="-31">RqZeroTorque!</label>
+<label kind="assignment" x="755" y="-16">GCTimer=0</label>
+</transition>
+<transition>
+<source ref="id27"/>
+<target ref="id26"/>
+<label kind="synchronisation" x="719" y="63">_void!</label>
+</transition>
+<transition>
+<source ref="id33"/>
+<target ref="id28"/>
+<label kind="synchronisation" x="-919" y="309">new?</label>
+</transition>
+<transition>
+<source ref="id33"/>
+<target ref="id29"/>
+<label kind="synchronisation" x="-791" y="301">old?</label>
+</transition>
+<transition>
+<source ref="id32"/>
+<target ref="id33"/>
+<label kind="synchronisation" x="-759" y="341">raise?</label>
+<label kind="assignment" x="-759" y="356">yr=0</label>
+</transition>
+<transition>
+<source ref="id35"/>
+<target ref="id32"/>
+<label kind="synchronisation" x="-655" y="341">old?</label>
+</transition>
+<transition>
+<source ref="id30"/>
+<target ref="id33"/>
+<label kind="synchronisation" x="-875" y="406">raise?</label>
+<label kind="assignment" x="-875" y="421">yr=0</label>
+</transition>
+<transition>
+<source ref="id31"/>
+<target ref="id30"/>
+<label kind="synchronisation" x="-743" y="469">syncTime?</label>
+</transition>
+<transition>
+<source ref="id35"/>
+<target ref="id31"/>
+<label kind="synchronisation" x="-651" y="406">new?</label>
+<label kind="assignment" x="-651" y="421">yr=0</label>
+</transition>
+<transition>
+<source ref="id38"/>
+<target ref="id34"/>
+<label kind="synchronisation" x="-487" y="229">new?</label>
+</transition>
+<transition>
+<source ref="id34"/>
+<target ref="id35"/>
+<label kind="synchronisation" x="-555" y="342">down!</label>
+<label kind="guard" x="-555" y="327">yr&gt;20 , yr&lt;40</label>
+</transition>
+<transition>
+<source ref="id36"/>
+<target ref="id35"/>
+<label kind="synchronisation" x="-651" y="278">down!</label>
+<label kind="guard" x="-651" y="263">yr&gt;20 , yr&lt;40</label>
+</transition>
+<transition>
+<source ref="id38"/>
+<target ref="id36"/>
+<label kind="synchronisation" x="-623" y="173">old?</label>
+</transition>
+<transition>
+<source ref="id37"/>
+<target ref="id38"/>
+<label kind="synchronisation" x="-671" y="117">lower?</label>
+<label kind="assignment" x="-663" y="133">yr=0</label>
+</transition>
+<transition>
+<source ref="id39"/>
+<target ref="id38"/>
+<label kind="synchronisation" x="-651" y="38">lower?</label>
+<label kind="assignment" x="-651" y="53">yr=0</label>
+</transition>
+<transition>
+<source ref="id40"/>
+<target ref="id39"/>
+<label kind="synchronisation" x="-763" y="-42">syncTime?</label>
+</transition>
+</template>
+<system>// Place template instantiations here.
+
+
+// List one or more processes to be composed into a system.
+system Template;</system>
+<queries>
+<query>
+<formula>simulate [&lt;=1000; 100] {1}
+</formula>
+<comment></comment>
+</query>
+</queries>
+</nta>
